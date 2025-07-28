@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List view -->
+    <record id="petty_cash_request_tree_view" model="ir.ui.view">
+        <field name="model">petty.cash.request</field>
+        <field name="name">petty.cash.request.list</field>
+        <field name="arch" type="xml">
+            <list string="Petty Cash Requests"
+                decoration-success="state == 'completed'"
+                decoration-info="state == 'cashIssued'"
+                decoration-warning="state == 'requested'"
+                decoration-muted="state == 'draft'"
+                decoration-danger="state == 'cancelled'">
+                <field name="request_date" />
+                <field name="name" string="Request No" />
+                <field name="float_request_id" string="Float Name" />
+                <field name="request_type" string="Type" widget="badge" />
+                <field name="request_by" string="Requested By" />
+                <field name="category" string="Category" />
+                <field name="request_amount" string="Amount" sum="TotalAmount" />
+                <field name="hodApprovedBy" string="Approved By" />
+                <field name="state" string="Status" widget="badge" />
+            </list>
+        </field>
+    </record>
+
+    <!-- Form view-->
+    <record id="petty_cash_request_form_view" model="ir.ui.view">
+        <field name="name">petty.cash.request.form</field>
+        <field name="model">petty.cash.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_submit" string="Submit" type="object"
+                        class="btn-primary"
+                        invisible="state != 'draft'" />
+                    <button name="action_cancel" string="Cancel Request" type="object"
+                        invisible="state not in ['draft', 'requested']" />
+                    <button name="action_cash_issued" string="Cash Issued" type="object"
+                        class="btn-primary"
+                        invisible="state != 'requested'"
+                        groups="base.group_user" />
+                    <button name="action_complete_request" string="Complete Request" type="object"
+                        class="btn-success"
+                        invisible="state != 'cash_issued' or not cashReceivedByEmployee or not received_voucher" />
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,requested,cash_issued,completed" />
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1" />
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="request_by" />
+                            <!-- employee dept needs to be here -->
+                            <field name="float_request_id" />
+                            <field name="request_date" />
+                            <field name="due_date" />
+                            <field name="request_voucher" filename="request_voucher_filename" />
+                            <field name="category" />
+
+
+                        </group>
+                        <group>
+                            <field name="request_amount" />
+                            <field name="isHodApproved" />
+                            <field name="hodApprovedBy" invisible="not isHodApproved" />
+                            <field name="isFloatManagerApproved" />
+                            <field name="floatManagerApprovedBy"
+                                invisible="not isFloatManagerApproved" />
+                            <field name="cashReceivedByEmployee"
+                                invisible="state not in ['cash_issued', 'completed']" />
+                            <field name="received_voucher"
+                                invisible="state not in ['cash_issued', 'completed']" />
+                        </group>
+                    </group>
+
+                    <group>
+                        <field name="remarks" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search view with category filter -->
+    <record id="petty_cash_request_search_view" model="ir.ui.view">
+        <field name="name">petty.cash.request.search</field>
+        <field name="model">petty.cash.request</field>
+        <field name="arch" type="xml">
+            <search string="Search Petty Cash Requests">
+                <field name="name" />
+                <field name="request_by" />
+                <field name="category" />
+                <field name="request_amount" />
+                <separator />
+                <filter name="my_requests" string="My Requests"
+                    domain="[('request_by', '=', uid)]" />
+                <filter name="pending_approval" string="Pending Approval"
+                    domain="[('state', 'in', ['requested', 'hod_approval_pending', 'float_manager_approval_pending'])]" />
+                <filter name="approved" string="Approved"
+                    domain="[('state', 'in', ['hod_approved', 'float_manager_approved', 'cash_issued'])]" />
+                <separator />
+                <filter name="petty_cash_only" string="Petty Cash Only"
+                    domain="[('request_type', '=', 'petty_cash')]" />
+                <filter name="iou_only" string="IOU Only"
+                    domain="[('request_type', '=', 'iou')]" />
+
+
+                <separator />
+                <group expand="0" string="Group By">
+                    <filter name="group_by_category" string="Category"
+                        context="{'group_by': 'category'}" />
+                    <filter name="group_by_type" string="Request Type"
+                        context="{'group_by': 'request_type'}" />
+                    <filter name="group_by_state" string="Status"
+                        context="{'group_by': 'state'}" />
+                    <filter name="group_by_requester" string="Requested By"
+                        context="{'group_by': 'request_by'}" />
+                    <filter name="filter_by_float" string="Float Name"
+                        domain="[]" context="{'group_by': 'float_request_id'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- window action-->
+    <record id="action_petty_cash_requests" model="ir.actions.act_window">
+        <field name="name">Petty Cash Requests</field>
+        <field name="res_model">petty.cash.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="petty_cash_request_search_view" />
+        <!-- <field name="domain">[('float_request_id', '=',
+            context.get('search_default_float_request_id'))]</field> -->
+        <field name="context">{'default_request_type': 'petty_cash'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create Petty Cash Requests
+            </p>
+            <p>
+                Click "New" to create a new petty cash request for manual processing.
+            </p>
+        </field>
+    </record>
+</odoo>

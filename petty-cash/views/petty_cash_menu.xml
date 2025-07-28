@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Main Menu -->
+        <menuitem id="petty_cash_menu_root"
+            name="Petty Cash Management"
+            sequence="10"
+            web_icon="petty_cash_management,static/description/icon.png" />
+
+        <!-- Float Management Menu (Parent Menu) -->
+        <menuitem id="menu_float_management"
+            name="Float Management"
+            parent="petty_cash_menu_root"
+            sequence="10" />
+
+
+        <!-- Petty Cash Requests Menu (Parent Menu) -->
+        <menuitem id="menu_petty_cash_requests"
+            name="Petty Cash Requests"
+            parent="petty_cash_menu_root"
+            action="action_petty_cash_requests"
+            sequence="10" />
+
+        <!-- IOU Request Menu (under Petty Cash Requests) -->
+        <menuitem id="menu_iou_requests"
+            name="IOU Requests"
+            parent="petty_cash_menu_root"
+            action="action_iou_requests"
+            sequence="10" />
+
+
+        <!-- Float Requests under Float Management -->
+        <menuitem id="menu_float_requests"
+            name="Petty Cash Floats"
+            parent="menu_float_management"
+            action="action_float_request"
+            sequence="20" />
+
+        <!-- Float Customization under Float Management -->
+        <menuitem id="menu_float_customization"
+            name="Float Customization"
+            parent="menu_float_management"
+            sequence="20" />
+
+        <!-- Reimbursement Menu -->
+        <menuitem id="menu_reimbursement"
+            name="Reimbursement"
+            parent="petty_cash_menu_root"
+            sequence="40" />
+
+        <!-- Reports Submenu -->
+        <menuitem id="menu_petty_cash_reports"
+            name="Reports"
+            parent="petty_cash_menu_root"
+            sequence="50" />
+
+        <!-- Petty Cash Reports -->
+        <menuitem id="menu_petty_cash_report"
+            name="Petty Cash Report"
+            parent="menu_petty_cash_reports"
+            sequence="10" />
+
+        <!-- IOU Reports -->
+        <menuitem id="menu_iou_report"
+            name="IOU Report"
+            parent="menu_petty_cash_reports"
+            sequence="20" />
+
+        <!-- Configuration Submenu -->
+        <menuitem id="menu_petty_cash_config"
+            name="Configuration"
+            parent="petty_cash_menu_root"
+            sequence="100" />
+
+        <!-- Categories Menu under Configuration -->
+        <menuitem id="menu_petty_cash_categories"
+            name="Categories"
+            parent="menu_petty_cash_config"
+            action="action_petty_cash_categories"
+            sequence="10" />
+
+        <!-- Float Configuration -->
+        <menuitem id="menu_float_config"
+            name="Float Settings"
+            parent="menu_petty_cash_config"
+            sequence="20" />
+
+        <!-- System Settings -->
+        <menuitem id="menu_system_settings"
+            name="System Settings"
+            parent="menu_petty_cash_config"
+            sequence="30" />
+    </data>
+
+</odoo>

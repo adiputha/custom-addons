@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="cash_denomination_wizard_form" model="ir.ui.view">
+        <field name="name">cash.denomination.wizard.form</field>
+        <field name="model">cash.denomination.wizard</field>
+        <field name="arch" type="xml">
+            <form string="💰 Cash Denomination Management" class="o_form_view_modern">
+                <header>
+                    <div class="alert alert-info mb-3 shadow-sm border-0"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px;">
+                        <div class="d-flex align-items-center">
+                            <i class="fa fa-info-circle fa-2x me-3"></i>
+                            <div>
+                                <h5 class="mb-1 fw-bold">Cash Denomination Wizard</h5>
+                                <small class="opacity-75">Select denominations to fulfill the cash
+                                    request</small>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="row g-4">
+                    <!-- Request Details Card -->
+                    <div class="col-12">
+                        <div class="card shadow-sm border-0"
+                            style="border-radius: 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <div class="card-header border-0 text-white"
+                                style="border-radius: 15px 15px 0 0;">
+                                <h6 class="mb-0 fw-bold">
+                                    <i class="fa fa-file-text me-2"></i>Request Information </h6>
+                            </div>
+                            <div class="card-body bg-white" style="border-radius: 0 0 15px 15px;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="o_form_label text-muted fw-bold small">REQUEST
+                                                NUMBER</div>
+                                            <field name="request_number"
+                                                class="form-control-lg border-0 bg-light"
+                                                style="border-radius: 10px; font-weight: 600; color: #495057;" />
+                                        </div>
+                                        <div class="form-group mt-3">
+                                            <div class="o_form_label text-muted fw-bold small">CASH
+                                                IN HAND</div>
+                                            <field name="cash_in_hand" widget="monetary"
+                                                class="form-control-lg border-0 bg-light text-success fw-bold"
+                                                style="border-radius: 10px;" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="o_form_label text-muted fw-bold small">REQUESTED
+                                                AMOUNT</div>
+                                            <field name="requested_amount" widget="monetary"
+                                                class="form-control-lg border-0 text-primary fw-bold"
+                                                style="border-radius: 10px; background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); font-size: 1.2em;" />
+                                        </div>
+                                        <div class="form-group mt-3">
+                                            <div class="o_form_label text-muted fw-bold small">SELECTED
+                                                AMOUNT</div>
+                                            <field name="selected_amount" widget="monetary"
+                                                class="form-control-lg border-0 text-success fw-bold"
+                                                style="border-radius: 10px; background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%); font-size: 1.2em;" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Denomination Selection Card -->
+                    <div class="col-12">
+                        <div class="card shadow-lg border-0" style="border-radius: 15px;">
+                            <div class="card-header border-0 text-white"
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px 15px 0 0;">
+                                <h6 class="mb-0 fw-bold">
+                                    <i class="fa fa-money me-2"></i>Cash Denomination Selection </h6>
+                            </div>
+                            <div class="card-body"
+                                style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                                <div class="row g-3">
+                                    <!-- Left Column -->
+                                    <div class="col-md-6">
+                                        <!-- Rs. 5000 -->
+                                        <div class="denomination-row mb-3 p-3 bg-white shadow-sm"
+                                            style="border-radius: 12px; border-left: 4px solid #dc3545;">
+                                            <div class="o_form_label fw-bold text-danger mb-2">💵
+                                                Rs. 5,000</div>
+                                            <div
+                                                class="d-flex align-items-center justify-content-between">
+                                                <div class="available-info">
+                                                    <field name="denom_5000_available" nolabel="1"
+                                                        readonly="1"
+                                                        class="badge bg-light text-dark fw-bold" />
+                                                    <span class="text-muted small"> available</span>
+                                                </div>
+                                                <div class="denomination-input">
+                                                    <field name="denom_5000_qty" nolabel="1"
+                                                        class="form-control text-center fw-bold"
+                                                        style="width: 80px; border-radius: 8px; border: 2px solid #dee2e6;" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Rs. 1000 -->
+                                        <div class="denomination-row mb-3 p-3 bg-white shadow-sm"
+                                            style="border-radius: 5px; border-left: 4px solid #fd7e14;">
+                                            <div class="o_form_label fw-bold text-warning mb-2">💵
+                                                Rs. 1,000</div>
+                                            <div
+                                                class="d-flex align-items-center justify-content-between">
+                                                <div class="available-info">
+                                                    <field name="denom_1000_available" nolabel="1"
+                                                        readonly="1"
+                                                        class="badge bg-light text-dark fw-bold" />
+                                                    <span class="text-muted small"> available</span>
+                                                </div>
+                                                <div class="denomination-input">
+                                                    <field name="denom_1000_qty" nolabel="1"
+                                                        class="form-control text-center fw-bold"
+                                                        style="width: 80px; border-radius: 8px; border: 2px solid #dee2e6;" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Rs. 500 -->
+                                        <div class="denomination-row mb-3 p-3 bg-white shadow-sm"
+                                            style="border-radius: 12px; border-left: 4px solid #198754;">
+                                            <div class="o_form_label fw-bold text-success mb-2">💵
+                                                Rs. 500</div>
+                                            <div
+                                                class="d-flex align-items-center justify-content-between">
+                                                <div class="available-info">
+                                                    <field name="denom_500_available" nolabel="1"
+                                                        readonly="1"
+                                                        class="badge bg-light text-dark fw-bold" />
+                                                    <span class="text-muted small"> available</span>
+                                                </div>
+                                                <div class="denomination-input">
+                                                    <field name="denom_500_qty" nolabel="1"
+                                                        class="form-control text-center fw-bold"
+                                                        style="width: 80px; border-radius: 8px; border: 2px solid #dee2e6;" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Rs. 100 -->
+                                        <div class="denomination-row mb-3 p-3 bg-white shadow-sm"
+                                            style="border-radius: 12px; border-left: 4px solid #0d6efd;">
+                                            <div class="o_form_label fw-bold text-primary mb-2">💵
+                                                Rs. 100</div>
+                                            <div
+                                                class="d-flex align-items-center justify-content-between">
+                                                <div class="available-info">
+                                                    <field name="denom_100_available" nolabel="1"
+                                                        readonly="1"
+                                                        class="badge bg-light text-dark fw-bold" />
+                                                    <span class="text-muted small"> available</span>
+                                                </div>
+                                                <div class="denomination-input">
+                                                    <field name="denom_100_qty" nolabel="1"
+                                                        class="form-control text-center fw-bold"
+                                                        style="width: 80px; border-radius: 8px; border: 2px solid #dee2e6;" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Rs. 50 -->
+                                        <div class="denomination-row mb-3 p-3 bg-white shadow-sm"
+                                            style="border-radius: 12px; border-left: 4px solid #6f42c1;">
+                                            <div class="o_form_label fw-bold text-purple mb-2">💵
+                                                Rs. 50</div>
+                                            <div
+                                                class="d-flex align-items-center justify-content-between">
+                                                <div class="available-info">
+                                                    <field name="denom_50_available" nolabel="1"
+                                                        readonly="1"
+                                                        class="badge bg-light text-dark fw-bold" />
+                                                    <span class="text-muted small"> available</span>
+                                                </div>
+                                                <div class="denomination-input">
+                                                    <field name="denom_50_qty" nolabel="1"
+                                                        class="form-control text-center fw-bold"
+                                                        style="width: 80px; border-radius: 8px; border: 2px solid #dee2e6;" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right Column -->
+                                    <div class="col-md-6">
+                                        <!-- Rs. 20 -->
+                                        <div class="denomination-row mb-3 p-3 bg-white shadow-sm"
+                                            style="border-radius: 12px; border-left: 4px solid #20c997;">
+                                            <div class="o_form_label fw-bold text-info mb-2">💵 Rs.
+                                                20</div>
+                                            <div
+                                                class="d-flex align-items-center justify-content-between">
+                                                <div class="available-info">
+                                                    <field name="denom_20_available" nolabel="1"
+                                                        readonly="1"
+                                                        class="badge bg-light text-dark fw-bold" />
+                                                    <span class="text-muted small"> available</span>
+                                                </div>
+                                                <div class="denomination-input">
+                                                    <field name="denom_20_qty" nolabel="1"
+                                                        class="form-control text-center fw-bold"
+                                                        style="width: 80px; border-radius: 8px; border: 2px solid #dee2e6;" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Rs. 10 -->
+                                        <div class="denomination-row mb-3 p-3 bg-white shadow-sm"
+                                            style="border-radius: 12px; border-left: 4px solid #ffc107;">
+                                            <div class="o_form_label fw-bold text-warning mb-2">🪙
+                                                Rs. 10</div>
+                                            <div
+                                                class="d-flex align-items-center justify-content-between">
+                                                <div class="available-info">
+                                                    <field name="denom_10_available" nolabel="1"
+                                                        readonly="1"
+                                                        class="badge bg-light text-dark fw-bold" />
+                                                    <span class="text-muted small"> available</span>
+                                                </div>
+                                                <div class="denomination-input">
+                                                    <field name="denom_10_qty" nolabel="1"
+                                                        class="form-control text-center fw-bold"
+                                                        style="width: 80px; border-radius: 8px; border: 2px solid #dee2e6;" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Rs. 5 -->
+                                        <div class="denomination-row mb-3 p-3 bg-white shadow-sm"
+                                            style="border-radius: 12px; border-left: 4px solid #6c757d;">
+                                            <div class="o_form_label fw-bold text-dark mb-2">🪙 Rs.
+                                                5</div>
+                                            <div
+                                                class="d-flex align-items-center justify-content-between">
+                                                <div class="available-info">
+                                                    <field name="denom_5_available" nolabel="1"
+                                                        readonly="1"
+                                                        class="badge bg-light text-dark fw-bold" />
+                                                    <span class="text-muted small"> available</span>
+                                                </div>
+                                                <div class="denomination-input">
+                                                    <field name="denom_5_qty" nolabel="1"
+                                                        class="form-control text-center fw-bold"
+                                                        style="width: 80px; border-radius: 8px; border: 2px solid #dee2e6;" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Rs. 2 -->
+                                        <div class="denomination-row mb-3 p-3 bg-white shadow-sm"
+                                            style="border-radius: 12px; border-left: 4px solid #e83e8c;">
+                                            <div class="o_form_label fw-bold text-pink mb-2">🪙 Rs.
+                                                2</div>
+                                            <div
+                                                class="d-flex align-items-center justify-content-between">
+                                                <div class="available-info">
+                                                    <field name="denom_2_available" nolabel="1"
+                                                        readonly="1"
+                                                        class="badge bg-light text-dark fw-bold" />
+                                                    <span class="text-muted small"> available</span>
+                                                </div>
+                                                <div class="denomination-input">
+                                                    <field name="denom_2_qty" nolabel="1"
+                                                        class="form-control text-center fw-bold"
+                                                        style="width: 80px; border-radius: 8px; border: 2px solid #dee2e6;" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Rs. 1 -->
+                                        <div class="denomination-row mb-3 p-3 bg-white shadow-sm"
+                                            style="border-radius: 12px; border-left: 4px solid #495057;">
+                                            <div class="o_form_label fw-bold text-dark mb-2">🪙 Rs.
+                                                1</div>
+                                            <div
+                                                class="d-flex align-items-center justify-content-between">
+                                                <div class="available-info">
+                                                    <field name="denom_1_available" nolabel="1"
+                                                        readonly="1"
+                                                        class="badge bg-light text-dark fw-bold" />
+                                                    <span class="text-muted small"> available</span>
+                                                </div>
+                                                <div class="denomination-input">
+                                                    <field name="denom_1_qty" nolabel="1"
+                                                        class="form-control text-center fw-bold"
+                                                        style="width: 80px; border-radius: 8px; border: 2px solid #dee2e6;" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cash Balance Section -->
+                    <div class="col-12">
+                        <div class="card shadow-sm border-0" style="border-radius: 15px;">
+                            <div class="card-body p-4">
+                                <div class="form-check form-switch mb-4">
+                                    <field name="is_cash_balanced"
+                                        class="fw-bold text-primary"
+                                        style="transform: scale(1.3);" />
+                                    <i
+                                        class="fa fa-balance-scale ms-2"></i>Is cash Balanced? </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Balance Denomination Card -->
+                    <div class="col-12" invisible="not is_cash_balanced">
+                        <div class="card shadow-lg border-0" style="border-radius: 15px;">
+                            <div class="card-header border-0 text-white"
+                                style="background: linear-gradient(135deg, #ff6b6b 0%, #ffd93d 100%); border-radius: 15px 15px 0 0;">
+                                <h6 class="mb-0 fw-bold">
+                                    <i class="fa fa-calculator me-2"></i>Balance Denomination </h6>
+                            </div>
+                            <div class="card-body"
+                                style="background: linear-gradient(135deg, #fff5f5 0%, #fffbf0 100%);">
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="o_form_label text-muted fw-bold small">BALANCE
+                                                AMOUNT</div>
+                                            <field name="balance_amount" widget="monetary"
+                                                readonly="1"
+                                                class="form-control-lg border-0 bg-light text-warning fw-bold"
+                                                style="border-radius: 10px;" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="o_form_label text-muted fw-bold small">SELECTED
+                                                BALANCE</div>
+                                            <field name="selected_balance_amount" widget="monetary"
+                                                readonly="1"
+                                                class="form-control-lg border-0 text-info fw-bold"
+                                                style="border-radius: 10px; background: linear-gradient(135deg, #e1f5fe 0%, #f3e5f5 100%);" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <field name="balance_5000_qty" string="Rs. 5,000"
+                                            class="form-control mb-3" style="border-radius: 8px;" />
+                                        <field name="balance_1000_qty" string="Rs. 1,000"
+                                            class="form-control mb-3" style="border-radius: 8px;" />
+                                        <field name="balance_500_qty" string="Rs. 500"
+                                            class="form-control mb-3" style="border-radius: 8px;" />
+                                        <field name="balance_100_qty" string="Rs. 100"
+                                            class="form-control mb-3" style="border-radius: 8px;" />
+                                        <field name="balance_50_qty" string="Rs. 50"
+                                            class="form-control mb-3" style="border-radius: 8px;" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <field name="balance_20_qty" string="Rs. 20"
+                                            class="form-control mb-3" style="border-radius: 8px;" />
+                                        <field name="balance_10_qty" string="Rs. 10"
+                                            class="form-control mb-3" style="border-radius: 8px;" />
+                                        <field name="balance_5_qty" string="Rs. 5"
+                                            class="form-control mb-3" style="border-radius: 8px;" />
+                                        <field name="balance_2_qty" string="Rs. 2"
+                                            class="form-control mb-3" style="border-radius: 8px;" />
+                                        <field name="balance_1_qty" string="Rs. 1"
+                                            class="form-control mb-3" style="border-radius: 8px;" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="mt-4">
+                    <div class="d-flex justify-content-end gap-3">
+                        <button name="action_cancel" string="Cancel" type="object"
+                            class="btn btn-outline-secondary btn-lg px-5"
+                            style="border-radius: 25px; font-weight: 600;">
+                            <i class="fa fa-times me-2"></i>Cancel </button>
+                        <button name="action_update_amount" string="Update Amount" type="object"
+                            class="btn btn-primary btn-lg px-5"
+                            style="border-radius: 25px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                            <i class="fa fa-check me-2"></i>Update Amount </button>
+                    </div>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

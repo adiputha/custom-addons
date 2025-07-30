@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="iou_request_list_view" model="ir.ui.view">
+        <field name="name">iou.request.list</field>
+        <field name="model">petty.cash.iou.request</field>
+        <field name="arch" type="xml">
+            <list string="IOU Requests List"
+                decoration-success="state == 'completed'"
+                decoration-info="state == 'pending_bill_submission'"
+                decoration-warning="state in ['requested', 'hod_approval_pending', 'float_manager_approval_pending']"
+                decoration-muted="state == 'draft'"
+                decoration-danger="state in ['cancelled', 'hod_rejected', 'float_manager_rejected']">
+                <field name="request_date" />
+                <field name="name" string="IOU No" />
+                <field name="float_request_id" string="Float Name" />
+                <field name="request_by" string="Requested By" />
+                <field name="request_amount" string="Amount" sum="TotalAmount" />
+                <field name="due_date" string="Due Date" />
+                <field name="hodApprovedBy" string="Approved By" />
+                <field name="floatManagerApprovedBy" string="Float Manager Approved By" />
+                <field name="state" string="Status" widget="badge" />
+            </list>
+        </field>
+    </record>
+
+    <!-- IOU Request Search View -->
+    <record id="iou_request_list_search_view" model="ir.ui.view">
+        <field name="name">iou.request.list.search</field>
+        <field name="model">petty.cash.iou.request</field>
+        <field name="arch" type="xml">
+            <search string="IOU Requests">
+                <field name="name" string="Request No" />
+                <field name="request_by" string="Requested By" />
+                <field name="state" string="Status" />
+                <separator />
+                <filter name="approved" string="Approved"
+                    domain="[('state', 'in', ['hod_approved', 'float_manager_approved'])]" />
+                <filter name="pending_bill_submission" string="Pending Bill Submission"
+                    domain="[('state', '=', 'pending_bill_submission')]" />
+                <filter name="completed" string="Completed"
+                    domain="[('state', '=', 'completed')]" />
+                <filter name="overdue" string="Overdue"
+                    domain="[('due_date', '&lt;', context_today().strftime('%Y-%m-%d')), ('state', 'not in', ['completed', 'cancelled'])]" />
+                <separator />
+                <group expand="0" string="Group By">
+                    <filter name="group_by_state" string="Status"
+                        context="{'group_by': 'state'}" />
+                    <filter name="group_by_requester" string="Requested By"
+                        context="{'group_by': 'request_by'}" />
+                    <filter name="group_by_due_date" string="Due Date"
+                        context="{'group_by': 'due_date'}" />
+                    <filter name="filter_by_float" string="Float Name"
+                        domain="[]" context="{'group_by': 'float_request_id'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- window action -->
+    <record id="action_iou_requests_list" model="ir.actions.act_window">
+        <field name="name">IOU Requests list</field>
+        <field name="res_model">petty.cash.iou.request</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="iou_request_list_search_view" />
+    </record>
+</odoo>

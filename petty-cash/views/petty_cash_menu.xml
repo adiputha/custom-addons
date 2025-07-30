@@ -13,34 +13,35 @@
             parent="petty_cash_menu_root"
             sequence="10" />
 
-
-        <!-- Petty Cash Requests Menu (Parent Menu) -->
-        <menuitem id="menu_petty_cash_requests"
-            name="Petty Cash Requests"
-            parent="petty_cash_menu_root"
-            action="action_petty_cash_requests"
-            sequence="10" />
-
-        <!-- IOU Request Menu (under Petty Cash Requests) -->
-        <menuitem id="menu_iou_requests"
-            name="IOU Requests"
-            parent="petty_cash_menu_root"
-            action="action_iou_requests"
-            sequence="10" />
-
-
         <!-- Float Requests under Float Management -->
         <menuitem id="menu_float_requests"
             name="Petty Cash Floats"
             parent="menu_float_management"
             action="action_float_request"
-            sequence="20" />
+            sequence="10" />
 
         <!-- Float Customization under Float Management -->
         <menuitem id="menu_float_customization"
             name="Float Customization"
             parent="menu_float_management"
+            action="action_float_customization"
             sequence="20" />
+
+
+        <!-- Petty Cash Requests Menu (Parent Menu) -->
+        <menuitem id="menu_petty_cash_requests"
+            name="Petty Cash Requests"
+            parent="petty_cash_menu_root"
+            action="action_petty_cash_requests_list"
+            sequence="20" />
+
+        <!-- IOU Request Menu (under Petty Cash Requests) -->
+        <menuitem id="menu_iou_requests"
+            name="IOU Requests"
+            parent="petty_cash_menu_root"
+            action="action_iou_requests_list"
+            sequence="30" />
+
 
         <!-- Reimbursement Menu -->
         <menuitem id="menu_reimbursement"

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Petty Cash List View -->
+        <record id="petty_cash_list_view" model="ir.ui.view">
+            <field name="name">petty.cash.list</field>
+            <field name="model">petty.cash.request</field>
+            <field name="arch" type="xml">
+                <list string="Petty Cash Requests"
+                    decoration-success="state == 'completed'"
+                    decoration-info="state == 'cashIssued'"
+                    decoration-warning="state == 'requested'"
+                    decoration-muted="state == 'draft'"
+                    decoration-danger="state == 'cancelled'">
+                    <field name="request_date" />
+                    <field name="name" string="Request No" />
+                    <field name="float_request_id" string="Float Name" />
+                    <field name="request_by" string="Requested By" />
+                    <field name="category" string="Category" />
+                    <field name="request_amount" string="Amount" sum="TotalAmount" />
+                    <field name="hodApprovedBy" string="Approved By" />
+                    <field name="state" string="Status" widget="badge" />
+                </list>
+            </field>
+        </record>
+
+        <!-- Petty Cash Search View -->
+        <record id="petty_cash_requests_list_search_view" model="ir.ui.view">
+            <field name="name">petty.cash.list.search</field>
+            <field name="model">petty.cash.request</field>
+            <field name="arch" type="xml">
+                <search string="Petty Cash Requests">
+                    <field name="name" string="Request No" />
+                    <field name="request_by" string="Requested By" />
+                    <field name="category" string="Category" />
+                    <field name="state" string="Status" />
+                    <separator />
+                    <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]" />
+                    <filter name="requested" string="Requested"
+                        domain="[('state', '=', 'requested')]" />
+                    <filter name="cash_issued" string="Cash Issued"
+                        domain="[('state', '=', 'cashIssued')]" />
+                    <filter name="completed" string="Completed"
+                        domain="[('state', '=', 'completed')]" />
+                    <filter name="cancelled" string="Cancelled"
+                        domain="[('state', '=', 'cancelled')]" />
+                    <separator />
+                    <group expand="0" string="Group By">
+                        <filter name="group_by_category" string="Category"
+                            context="{'group_by': 'category'}" />
+                        <filter name="group_by_state" string="Status"
+                            context="{'group_by': 'state'}" />
+                        <filter name="group_by_requester" string="Requested By"
+                            context="{'group_by': 'request_by'}" />
+                        <filter name="filter_by_float" string="Float Name"
+                            domain="[]" context="{'group_by': 'float_request_id'}" />
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- window action -->
+        <record id="action_petty_cash_requests_list" model="ir.actions.act_window">
+            <field name="name">Petty Cash Requests list</field>
+            <field name="res_model">petty.cash.request</field>
+            <field name="view_mode">list</field>
+            <field name="search_view_id" ref="petty_cash_requests_list_search_view" />
+        </record>
+    </data>
+</odoo>

@@ -26,4 +26,9 @@ access_float_request_manager,float.request.manager,model_float_request,base.grou
 access_float_request_admin,float.request.admin,model_float_request,base.group_system,1,1,1,1
 access_float_request_accountant,float.request.accountant,model_float_request,account.group_account_user,1,1,1,1
 
+access_float_customization_user,float.customization.user,model_float_customization,base.group_user,1,1,1,0
+access_float_customization_manager,float.customization.manager,model_float_customization,base.group_erp_manager,1,1,1,1
+access_float_customization_admin,float.customization.admin,model_float_customization,base.group_system,1,1,1,1
+access_float_customization_accountant,float.customization.accountant,model_float_customization,account.group_account_user,1,1,1,1
+
 access_cash_denomination_wizard_user,cash.denomination.wizard.user,model_cash_denomination_wizard,base.group_user,1,1,1,1

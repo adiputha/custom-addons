@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_form_float_customization" model="ir.ui.view">
+        <field name="name">float.customization.form</field>
+        <field name="model">float.customization</field>
+        <field name="arch" type="xml">
+            <form string="Float Customization">
+                <header>
+                    <button name="action_submit" string="Submit for Approval"
+                        type="object" class="btn-primary"
+                        invisible="state != 'draft'" />
+                    <button name="action_approve" string="Approve Changes"
+                        type="object" class="btn-success"
+                        invisible="state != 'requested'"
+                        groups="account.group_account_manager" />
+                    <button name="action_reject" string="Reject"
+                        type="object" class="btn-danger"
+                        invisible="state != 'requested'"
+                        groups="account.group_account_manager" />
+                    <button name="action_reset_to_draft" string="Reset to Draft"
+                        type="object" class="btn-secondary"
+                        invisible="state != 'rejected'" />
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,requested,approved" />
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Float Customization Request</h1>
+                    </div>
+
+                    <!-- Current Float Information -->
+                    <group string="Current Float Information" name="current_info">
+                        <group>
+                            <field name="float_request_id"
+                                options="{'no_create': True}"
+                                readonly="state != 'draft'" />
+                            <field name="current_float_name" />
+                            <field name="current_department_id" />
+                        </group>
+                        <group>
+                            <field name="current_initial_amount" widget="monetary" />
+                            <field name="current_can_exceed" />
+                            <field name="current_float_manager_id" />
+                        </group>
+                    </group>
+
+                    <!-- Modifications Section -->
+                    <group string="Requested Modifications" name="modifications">
+                        <!-- Float Amount Modification -->
+                        <group string="Float Amount" col="2">
+                            <field name="modify_float_amount" />
+                            <field name="new_float_amount"
+                                widget="monetary"
+                                invisible="not modify_float_amount"
+                                required="modify_float_amount" />
+                        </group>
+
+                        <!-- Exceed Permission Modification -->
+                        <group string="Exceed Permission" col="2">
+                            <field name="modify_can_exceed" />
+                            <div invisible="not modify_can_exceed">
+                                <label for="new_can_exceed" string="New Can Exceed" />
+                                <field name="new_can_exceed" nolabel="1" />
+                                <br/>
+                                <label for="new_exceed_limit" string="New Exceed Limit"
+                                    invisible="not new_can_exceed"
+                                    required="new_can_exceed" />
+                                <field name="new_exceed_limit"
+                                    widget="monetary"
+                                    invisible="not new_can_exceed"
+                                    required="new_can_exceed"
+                                    nolabel="1" />
+                            </div>
+                        </group>
+
+                        <!-- Float Manager Modification -->
+                        <group string="Float Manager" col="2">
+                            <field name="modify_float_manager" />
+                            <field name="new_float_manager_id"
+                                invisible="not modify_float_manager"
+                                required="modify_float_manager"
+                                domain="[('share', '=', False)]"
+                                options="{'no_create': True}" />
+                        </group>
+                    </group>
+
+                    <!-- Reason and Additional Info -->
+                    <group string="Justification">
+                        <field name="reason_for_change"
+                            placeholder="Please provide a detailed explanation for why these changes are needed..."
+                            required="1" />
+                    </group>
+
+                    <group string="Additional Information">
+                        <field name="remarks"
+                            placeholder="Any additional comments or notes..." />
+                    </group>
+
+                    <!-- Approval Information (visible after approval) -->
+                    <group string="Approval Information"
+                        invisible="state not in ['approved', 'completed']">
+                        <group>
+                            <field name="approved_by" />
+                            <field name="approval_date" />
+                        </group>
+                        <group>
+                            <field name="request_date" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+
+    </record>
+    <record id="view_tree_float_customization" model="ir.ui.view">
+        <field name="name">float.customization.list</field>
+        <field name="model">float.customization</field>
+        <field name="arch" type="xml">
+            <list string="Float Customization Requests"
+                decoration-success="state == 'approved'"
+                decoration-warning="state == 'requested'"
+                decoration-info="state == 'draft'"
+                decoration-danger="state == 'rejected'">
+                <field name="request_date" />
+                <field name="float_request_id" />
+                <field name="current_department_id" />
+                <field name="modify_float_amount" widget="boolean_toggle" />
+                <field name="modify_can_exceed" widget="boolean_toggle" />
+                <field name="modify_float_manager" widget="boolean_toggle" />
+                <field name="create_uid" string="Requested By" />
+                <field name="state" widget="badge" />
+            </list>
+        </field>
+    </record>
+
+    <!-- Float Customization Search View -->
+    <record id="view_search_float_customization" model="ir.ui.view">
+        <field name="name">float.customization.search</field>
+        <field name="model">float.customization</field>
+        <field name="arch" type="xml">
+            <search string="Search Float Customizations">
+                <field name="float_request_id" />
+                <field name="current_department_id" />
+                <field name="create_uid" />
+
+                <!-- Status Filters -->
+                <filter string="Draft" name="draft"
+                    domain="[('state', '=', 'draft')]" />
+                <filter string="Requested" name="requested"
+                    domain="[('state', '=', 'requested')]" />
+                <filter string="Approved" name="approved"
+                    domain="[('state', '=', 'approved')]" />
+                <filter string="Rejected" name="rejected"
+                    domain="[('state', '=', 'rejected')]" />
+
+                <separator />
+                <!-- Modification Type Filters -->
+                <filter string="Amount Changes" name="amount_changes"
+                    domain="[('modify_float_amount', '=', True)]" />
+                <filter string="Exceed Changes" name="exceed_changes"
+                    domain="[('modify_can_exceed', '=', True)]" />
+                <filter string="Manager Changes" name="manager_changes"
+                    domain="[('modify_float_manager', '=', True)]" />
+
+                <separator />
+                <filter string="My Requests" name="my_requests"
+                    domain="[('create_uid', '=', uid)]" />
+                <filter string="Pending Approval" name="pending_approval"
+                    domain="[('state', '=', 'requested')]" />
+
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_status"
+                        context="{'group_by': 'state'}" />
+                    <filter string="Float" name="group_float"
+                        context="{'group_by': 'float_request_id'}" />
+                    <filter string="Department" name="group_department"
+                        context="{'group_by': 'current_department_id'}" />
+                    <filter string="Request Date" name="group_date"
+                        context="{'group_by': 'request_date'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Float Customization Action -->
+    <record id="action_float_customization" model="ir.actions.act_window">
+        <field name="name">Float Customization</field>
+        <field name="res_model">float.customization</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'default_state': 'draft'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No float customization requests yet!
+            </p>
+            <p> Float customization allows you to modify existing approved floats. <br />You can
+                change amounts, exceed permissions, or float managers. <br />Click "Create" to
+                submit a customization request. </p>
+        </field>
+    </record>
+
+    <record id="view_wizard_float_customization" model="ir.ui.view">
+        <field name="name">float.customization.wizard</field>
+        <field name="model">float.customization</field>
+        <field name="arch" type="xml">
+            <form string="Customize Float">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Customize Float</h1>
+                    </div>
+
+                    <group>
+                        <field name="float_request_id"
+                            options="{'no_create': True}" />
+                    </group>
+
+                    <group string="What would you like to modify?">
+                        <field name="modify_float_amount" />
+                        <field name="modify_can_exceed" />
+                        <field name="modify_float_manager" />
+                    </group>
+
+                    <group string="Reason">
+                        <field name="reason_for_change"
+                            placeholder="Briefly explain why this change is needed..." />
+                    </group>
+                </sheet>
+
+                <footer>
+                    <button name="action_submit" string="Create Customization Request"
+                        type="object" class="btn-primary" />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for Quick Customization Wizard -->
+    <record id="action_wizard_float_customization" model="ir.actions.act_window">
+        <field name="name">Customize Float</field>
+        <field name="res_model">float.customization</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_wizard_float_customization" />
+        <field name="target">new</field>
+        <field name="context">{'default_state': 'draft'}</field>
+    </record>
+</odoo>

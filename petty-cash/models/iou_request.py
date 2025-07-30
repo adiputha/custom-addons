@@ -154,7 +154,6 @@ class IouRequest(models.Model):
     )
     
     
-    
     @api.depends('bill_ids.amount', 'bill_ids.status')
     def _compute_settlement_amount(self):
         """Compute the total settlement amount from related bills"""
@@ -270,7 +269,6 @@ class IouRequest(models.Model):
             }
         else:
             raise UserError(_("You can only issue cash for requests in the requested state."))
-        return True
     
     def action_complete_request(self):
         """Action to mark the IOU request as completed"""

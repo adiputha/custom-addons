@@ -3,12 +3,10 @@ from datetime import datetime, timedelta
 from odoo.exceptions import UserError
 from odoo.exceptions import ValidationError
 
-import base64
-import io
-import re
+
+
 import logging
 from PIL import Image
-import pytesseract
 from pdf2image import convert_from_bytes
 
 _logger = logging.getLogger(__name__)
@@ -254,7 +252,7 @@ class PettyCashRequest(models.Model):
             }
         else:
             raise UserError(_('Cash can only be issued for requested petty cash'))
-        return True
+
     
     def action_complete_request(self):
         """Complete the request after verifying cash receipt"""

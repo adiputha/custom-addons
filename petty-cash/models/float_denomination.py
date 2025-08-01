@@ -2,9 +2,9 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
 class FloatDenomination(models.Model):
-    __name__ = 'float.denomination'
-    __description__ = 'Float Denomination'
-    __order__ = 'float_request_id'
+    _name = 'float.denomination'
+    _description = 'Float Denomination'
+    _order = 'float_request_id'
     
     float_request_id = fields.Many2one(
         'float.request',

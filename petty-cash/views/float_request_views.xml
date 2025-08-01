@@ -216,25 +216,24 @@
 
                     </group>
                     <group string="Denomination Count"
-                        invisible="state not in 'approved' or not current_denomination_id">
+                        invisible="state != 'approved' or not current_denomination_id">
                         <field name="current_denomination_id" readonly="1" />
-                        <field name="denomination_ids" mode="tree" readonly="1" />
-
-                        <tree>
-                            <field name="denom_5000_qty" string="Rs. 5,000" />
-                            <field name="denom_1000_qty" string="Rs. 1,000" />
-                            <field name="denom_500_qty" string="Rs. 500" />
-                            <field name="denom_100_qty" string="Rs. 100" />
-                            <field name="denom_50_qty" string="Rs. 50" />
-                            <field name="denom_20_qty" string="Rs. 20" />
-                            <field name="denom_10_qty" string="Rs. 10" />
-                            <field name="denom_5_qty" string="Rs. 5" />
-                            <field name="denom_2_qty" string="Rs. 2" />
-                            <field name="denom_1_qty" string="Rs. 1" />
-                            <field name="total_amount" widget="monetary" />
-                            <field name="last_updated" />
-                        </tree>
-
+                        <field name="denomination_ids" mode="list" readonly="1">
+                            <list>
+                                <field name="denom_5000_qty" string="Rs. 5,000" />
+                                <field name="denom_1000_qty" string="Rs. 1,000" />
+                                <field name="denom_500_qty" string="Rs. 500" />
+                                <field name="denom_100_qty" string="Rs. 100" />
+                                <field name="denom_50_qty" string="Rs. 50" />
+                                <field name="denom_20_qty" string="Rs. 20" />
+                                <field name="denom_10_qty" string="Rs. 10" />
+                                <field name="denom_5_qty" string="Rs. 5" />
+                                <field name="denom_2_qty" string="Rs. 2" />
+                                <field name="denom_1_qty" string="Rs. 1" />
+                                <field name="total_amount" widget="monetary" />
+                                <field name="last_updated" />
+                            </list>
+                        </field>
                     </group>
                 </sheet>
             </form>

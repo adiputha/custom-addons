@@ -20,7 +20,7 @@
         # wizard
         "wizard/cash_denomination_wizard_view.xml",
         "wizard/cash_denomination_iou_wizard_view.xml",
-        "wizard/initial_denomination_wizard_view.xml",
+        "wizard/initial_denomination_wizard_views.xml",
         
         # views
         "views/float_customization_views.xml",

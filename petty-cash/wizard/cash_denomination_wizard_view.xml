@@ -17,128 +17,168 @@
                     <group>
                         <field name="request_number" readonly="1" />
                         <field name="cash_in_hand" widget="monetary" readonly="1" />
+                        <field name="request_type" invisible="1" />
                     </group>
                     <group>
                         <field name="requested_amount" widget="monetary" readonly="1" />
-                        <field name="selected_amount" widget="monetary" readonly="1" />
+                        <field name="selected_amount" widget="monetary" readonly="1"
+                            decoration-success="abs(selected_amount - requested_amount) &lt; 0.01"
+                            decoration-warning="abs(selected_amount - requested_amount) &gt;= 0.01" />
                     </group>
                 </group>
+
+                <!-- Auto Calculate Button -->
+                <div class="text-center mb-3">
+                    <button name="action_auto_calculate" string="🎯 Auto Calculate"
+                        type="object" class="btn-info" />
+                    <span class="text-muted ml-2">
+                        <small>Automatically calculate optimal denomination breakdown</small>
+                    </span>
+                </div>
 
                 <!-- Cash Denomination Selection -->
                 <notebook>
                     <page string="Denomination Selection">
                         <group>
-                            <group string="Notes">
+                            <group string="💵 Notes">
                                 <!-- Rs. 5000 -->
-                                <label for="denom_5000_qty" string="💵 Rs. 5,000" />
+                                <label for="denom_5000_qty" string="Rs. 5,000" />
                                 <div class="o_row">
                                     <field name="denom_5000_available" readonly="1"
-                                        class="oe_inline" />
+                                        class="oe_inline text-muted"
+                                        decoration-danger="denom_5000_available == 0" />
                                     <span class="text-muted"> available</span>
                                     <field name="denom_5000_qty" class="oe_inline"
                                         style="width: 80px;" />
                                 </div>
 
                                 <!-- Rs. 1000 -->
-                                <label for="denom_1000_qty" string="💵 Rs. 1,000" />
+                                <label for="denom_1000_qty" string="Rs. 1,000" />
                                 <div class="o_row">
                                     <field name="denom_1000_available" readonly="1"
-                                        class="oe_inline" />
+                                        class="oe_inline text-muted"
+                                        decoration-danger="denom_1000_available == 0" />
                                     <span class="text-muted"> available</span>
                                     <field name="denom_1000_qty" class="oe_inline"
                                         style="width: 80px;" />
                                 </div>
 
                                 <!-- Rs. 500 -->
-                                <label for="denom_500_qty" string="💵 Rs. 500" />
+                                <label for="denom_500_qty" string="Rs. 500" />
                                 <div class="o_row">
-                                    <field name="denom_500_available" readonly="1" class="oe_inline" />
+                                    <field name="denom_500_available" readonly="1"
+                                        class="oe_inline text-muted"
+                                        decoration-danger="denom_500_available == 0" />
                                     <span class="text-muted"> available</span>
                                     <field name="denom_500_qty" class="oe_inline"
                                         style="width: 80px;" />
                                 </div>
 
                                 <!-- Rs. 100 -->
-                                <label for="denom_100_qty" string="💵 Rs. 100" />
+                                <label for="denom_100_qty" string="Rs. 100" />
                                 <div class="o_row">
-                                    <field name="denom_100_available" readonly="1" class="oe_inline" />
+                                    <field name="denom_100_available" readonly="1"
+                                        class="oe_inline text-muted"
+                                        decoration-danger="denom_100_available == 0" />
                                     <span class="text-muted"> available</span>
                                     <field name="denom_100_qty" class="oe_inline"
                                         style="width: 80px;" />
                                 </div>
 
                                 <!-- Rs. 50 -->
-                                <label for="denom_50_qty" string="💵 Rs. 50" />
+                                <label for="denom_50_qty" string="Rs. 50" />
                                 <div class="o_row">
-                                    <field name="denom_50_available" readonly="1" class="oe_inline" />
+                                    <field name="denom_50_available" readonly="1"
+                                        class="oe_inline text-muted"
+                                        decoration-danger="denom_50_available == 0" />
                                     <span class="text-muted"> available</span>
                                     <field name="denom_50_qty" class="oe_inline"
                                         style="width: 80px;" />
                                 </div>
 
                                 <!-- Rs. 20 -->
-                                <label for="denom_20_qty" string="💵 Rs. 20" />
+                                <label for="denom_20_qty" string="Rs. 20" />
                                 <div class="o_row">
-                                    <field name="denom_20_available" readonly="1" class="oe_inline" />
+                                    <field name="denom_20_available" readonly="1"
+                                        class="oe_inline text-muted"
+                                        decoration-danger="denom_20_available == 0" />
                                     <span class="text-muted"> available</span>
                                     <field name="denom_20_qty" class="oe_inline"
                                         style="width: 80px;" />
                                 </div>
                             </group>
 
-                            <group string="Coins">
+                            <group string="🪙 Coins">
                                 <!-- Rs. 10 -->
-                                <label for="denom_10_qty" string="🪙 Rs. 10" />
+                                <label for="denom_10_qty" string="Rs. 10" />
                                 <div class="o_row">
-                                    <field name="denom_10_available" readonly="1" class="oe_inline" />
+                                    <field name="denom_10_available" readonly="1"
+                                        class="oe_inline text-muted"
+                                        decoration-danger="denom_10_available == 0" />
                                     <span class="text-muted"> available</span>
                                     <field name="denom_10_qty" class="oe_inline"
                                         style="width: 80px;" />
                                 </div>
 
                                 <!-- Rs. 5 -->
-                                <label for="denom_5_qty" string="🪙 Rs. 5" />
+                                <label for="denom_5_qty" string="Rs. 5" />
                                 <div class="o_row">
-                                    <field name="denom_5_available" readonly="1" class="oe_inline" />
+                                    <field name="denom_5_available" readonly="1"
+                                        class="oe_inline text-muted"
+                                        decoration-danger="denom_5_available == 0" />
                                     <span class="text-muted"> available</span>
-                                    <field name="denom_5_qty" class="oe_inline" style="width: 80px;" />
+                                    <field name="denom_5_qty" class="oe_inline"
+                                        style="width: 80px;" />
                                 </div>
 
                                 <!-- Rs. 2 -->
-                                <label for="denom_2_qty" string="🪙 Rs. 2" />
+                                <label for="denom_2_qty" string="Rs. 2" />
                                 <div class="o_row">
-                                    <field name="denom_2_available" readonly="1" class="oe_inline" />
+                                    <field name="denom_2_available" readonly="1"
+                                        class="oe_inline text-muted"
+                                        decoration-danger="denom_2_available == 0" />
                                     <span class="text-muted"> available</span>
-                                    <field name="denom_2_qty" class="oe_inline" style="width: 80px;" />
+                                    <field name="denom_2_qty" class="oe_inline"
+                                        style="width: 80px;" />
                                 </div>
 
                                 <!-- Rs. 1 -->
-                                <label for="denom_1_qty" string="🪙 Rs. 1" />
+                                <label for="denom_1_qty" string="Rs. 1" />
                                 <div class="o_row">
-                                    <field name="denom_1_available" readonly="1" class="oe_inline" />
+                                    <field name="denom_1_available" readonly="1"
+                                        class="oe_inline text-muted"
+                                        decoration-danger="denom_1_available == 0" />
                                     <span class="text-muted"> available</span>
-                                    <field name="denom_1_qty" class="oe_inline" style="width: 80px;" />
+                                    <field name="denom_1_qty" class="oe_inline"
+                                        style="width: 80px;" />
                                 </div>
                             </group>
                         </group>
                     </page>
 
                     <page string="Balance Denomination" invisible="not is_cash_balanced">
+                        <group string="Balance Information">
+                            <group>
+                                <field name="balance_amount" widget="monetary" readonly="1" />
+                                <field name="selected_balance_amount" widget="monetary" readonly="1" />
+                            </group>
+                        </group>
+
                         <group>
                             <group string="Notes Balance">
-                                <field name="balance_5000_qty" string="💵 Rs. 5,000" />
-                                <field name="balance_1000_qty" string="💵 Rs. 1,000" />
-                                <field name="balance_500_qty" string="💵 Rs. 500" />
-                                <field name="balance_100_qty" string="💵 Rs. 100" />
-                                <field name="balance_50_qty" string="💵 Rs. 50" />
-                                <field name="balance_20_qty" string="💵 Rs. 20" />
+                                <field name="balance_5000_qty" string="Rs. 5,000" />
+                                <field name="balance_1000_qty" string="Rs. 1,000" />
+                                <field name="balance_500_qty" string="Rs. 500" />
+                                <field name="balance_100_qty" string="Rs. 100" />
+                                <field name="balance_50_qty" string="Rs. 50" />
+                                <field name="balance_20_qty" string="Rs. 20" />
                             </group>
 
                             <group string="Coins Balance">
-                                <field name="balance_10_qty" string="🪙 Rs. 10" />
-                                <field name="balance_5_qty" string="🪙 Rs. 5" />
-                                <field name="balance_2_qty" string="🪙 Rs. 2" />
-                                <field name="balance_1_qty" string="🪙 Rs. 1" />
+                                <field name="balance_10_qty" string="Rs. 10" />
+                                <field name="balance_5_qty" string="Rs. 5" />
+                                <field name="balance_2_qty" string="Rs. 2" />
+                                <field name="balance_1_qty" string="Rs. 1" />
                             </group>
                         </group>
                     </page>
@@ -146,13 +186,26 @@
 
                 <!-- Cash Balance Toggle -->
                 <group>
-                    <field name="is_cash_balanced" string="⚖️ Is cash balanced?" />
+                    <field name="is_cash_balanced" string="⚖️ Need to give balance?" />
                 </group>
 
+                <!-- Validation Messages -->
+                <div class="alert alert-success"
+                    invisible="abs(selected_amount - requested_amount) &gt;= 0.01">
+                    <strong>✅ Amount Match:</strong> Selected amount matches requested amount! </div>
+
+                <div class="alert alert-warning"
+                    invisible="abs(selected_amount - requested_amount) &lt; 0.01 or selected_amount == 0">
+                    <strong>⚠️ Amount Mismatch:</strong> Selected amount (Rs. <field
+                        name="selected_amount" readonly="1" nolabel="1" />) does not match requested
+                    amount (Rs. <field name="requested_amount" readonly="1" nolabel="1" />) </div>
+
                 <footer>
-                    <button name="action_cancel" string="Cancel" type="object" class="btn-secondary" />
-                    <button name="action_update_amount" string="Update Amount" type="object"
-                        class="btn-primary" />
+                    <button name="action_cancel" string="❌ Cancel" type="object"
+                        class="btn-secondary" />
+                    <button name="action_update_amount" string="💰 Issue Cash" type="object"
+                        class="btn-primary"
+                        invisible="abs(selected_amount - requested_amount) &gt;= 0.01" />
                 </footer>
             </form>
         </field>

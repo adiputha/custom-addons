@@ -155,11 +155,18 @@ class FloatRequest(models.Model):
     def _compute_current_denomination(self):
         for record in self:
             if record.denomination_ids:
-                record.current_denomination_id = record.denomination_ids.sorted(
-                    "last_updated", reversed=True
-                )[0]
-            else:
-                record.current_denomination_id = False
+                # Get the denomination with the latest last_updated timestamp
+                latest_denomination = record.denomination_ids.search(
+                    [("float_request_id", "=", record.id)],
+                    order="last_updated desc",
+                    limit=1,
+                )
+
+            record.current_denomination_id = (
+                latest_denomination.id if latest_denomination else False
+            )
+        else:
+            record.current_denomination_id = False
 
     def create_initial_denomination_record(self):
         """Create an initial denomination record for the float request."""
@@ -208,24 +215,32 @@ class FloatRequest(models.Model):
         denom_1 = int(remaining_amount)
 
         return {
-            'denom_5000_qty': denom_5000,
-            'denom_1000_qty': denom_1000,
-            'denom_500_qty': denom_500,
-            'denom_100_qty': denom_100,
-            'denom_50_qty': denom_50,
-            'denom_20_qty': denom_20,
-            'denom_10_qty': denom_10,
-            'denom_5_qty': denom_5,
-            'denom_2_qty': denom_2,
-            'denom_1_qty': denom_1,
+            "denom_5000_qty": denom_5000,
+            "denom_1000_qty": denom_1000,
+            "denom_500_qty": denom_500,
+            "denom_100_qty": denom_100,
+            "denom_50_qty": denom_50,
+            "denom_20_qty": denom_20,
+            "denom_10_qty": denom_10,
+            "denom_5_qty": denom_5,
+            "denom_2_qty": denom_2,
+            "denom_1_qty": denom_1,
         }
 
     def action_approve(self):
-        """Override to create initial denomination record"""
-        result = super().action_approve()
+        """Approve the float request."""
         for record in self:
-            record.create_initial_denomination_record()
-        return result
+            if record.state != "requested":
+                raise UserError(
+                    _('Only requests in "Requested" state can be approved.')
+                )
+            record.state = "approved"
+            record.message_post(
+                body=_("Float request approved by %s") % self.env.user.name,
+                message_type="notification",
+            )
+        # Create initial denomination record after approval
+        record.create_initial_denomination_record()
 
     def action_view_denominations(self):
         """Open the denomination records for this float"""

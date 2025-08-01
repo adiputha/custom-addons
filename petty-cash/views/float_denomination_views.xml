@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="float_denomination_tree_view" model="ir.ui.view">
+        <field name="name">float.denomination.list</field>
+        <field name="model">float.denomination</field>
+        <field name="arch" type="xml">
+            <list string="Float Denominations" editable="bottom">
+                <field name="float_request_id" />
+                <field name="denom_5000_qty" string="Rs. 5,000" />
+                <field name="denom_1000_qty" string="Rs. 1,000" />
+                <field name="denom_500_qty" string="Rs. 500" />
+                <field name="denom_100_qty" string="Rs. 100" />
+                <field name="denom_50_qty" string="Rs. 50" />
+                <field name="denom_20_qty" string="Rs. 20" />
+                <field name="denom_10_qty" string="Rs. 10" />
+                <field name="denom_5_qty" string="Rs. 5" />
+                <field name="denom_2_qty" string="Rs. 2" />
+                <field name="denom_1_qty" string="Rs. 1" />
+                <field name="total_amount" widget="monetary" />
+                <field name="last_updated" />
+            </list>
+        </field>
+
+    </record>
+
+    <record id="float_denomination_form_view" model="ir.ui.view">
+        <field name="name">float.denomination.form</field>
+        <field name="model">float.denomination</field>
+        <field name="arch" type="xml">
+            <form string="Float Denomination">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="float_request_id" readonly="1" />
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="total_amount" widget="monetary" readonly="1" />
+                            <field name="last_updated" readonly="1" />
+                        </group>
+                    </group>
+
+                    <group string="Denomination Breakdown">
+                        <group string="Notes">
+                            <field name="denom_5000_qty" string="Rs. 5,000 Notes" />
+                            <field name="denom_1000_qty" string="Rs. 1,000 Notes" />
+                            <field name="denom_500_qty" string="Rs. 500 Notes" />
+                            <field name="denom_100_qty" string="Rs. 100 Notes" />
+                            <field name="denom_50_qty" string="Rs. 50 Notes" />
+                            <field name="denom_20_qty" string="Rs. 20 Notes" />
+                        </group>
+                        <group string="Coins">
+                            <field name="denom_10_qty" string="Rs. 10 Coins" />
+                            <field name="denom_5_qty" string="Rs. 5 Coins" />
+                            <field name="denom_2_qty" string="Rs. 2 Coins" />
+                            <field name="denom_1_qty" string="Rs. 1 Coins" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Float Denomination Action -->
+    <record id="action_float_denominations" model="ir.actions.act_window">
+        <field name="name">Float Denominations</field>
+        <field name="res_model">float.denomination</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No denomination records found!
+            </p>
+            <p>
+                Denomination records are automatically created when floats are approved.
+                They track the actual cash denominations available in each float.
+            </p>
+        </field>
+    </record>
+</odoo>

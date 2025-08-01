@@ -349,26 +349,36 @@
 
                                 <div class="row g-3">
                                     <div class="col-md-6">
+                                        <label for="balance_5000_qty">Rs. 5,000</label>
                                         <field name="balance_5000_qty" string="Rs. 5,000"
                                             class="form-control mb-3" style="border-radius: 8px;" />
+                                        <label for="balance_1000_qty">Rs. 1,000</label>
                                         <field name="balance_1000_qty" string="Rs. 1,000"
                                             class="form-control mb-3" style="border-radius: 8px;" />
+                                        <label for="balance_500_qty">Rs. 500</label>
                                         <field name="balance_500_qty" string="Rs. 500"
                                             class="form-control mb-3" style="border-radius: 8px;" />
+                                        <label for="balance_100_qty">Rs. 100</label>
                                         <field name="balance_100_qty" string="Rs. 100"
                                             class="form-control mb-3" style="border-radius: 8px;" />
+                                        <label for="balance_50_qty">Rs. 50</label>
                                         <field name="balance_50_qty" string="Rs. 50"
                                             class="form-control mb-3" style="border-radius: 8px;" />
                                     </div>
                                     <div class="col-md-6">
+                                        <label for="balance_20_qty">Rs. 20</label>
                                         <field name="balance_20_qty" string="Rs. 20"
                                             class="form-control mb-3" style="border-radius: 8px;" />
+                                        <label for="balance_10_qty">Rs. 10</label>
                                         <field name="balance_10_qty" string="Rs. 10"
                                             class="form-control mb-3" style="border-radius: 8px;" />
+                                        <label for="balance_5_qty">Rs. 5</label>
                                         <field name="balance_5_qty" string="Rs. 5"
                                             class="form-control mb-3" style="border-radius: 8px;" />
+                                        <label for="balance_2_qty">Rs. 2</label>
                                         <field name="balance_2_qty" string="Rs. 2"
                                             class="form-control mb-3" style="border-radius: 8px;" />
+                                        <label for="balance_1_qty">Rs. 1</label>
                                         <field name="balance_1_qty" string="Rs. 1"
                                             class="form-control mb-3" style="border-radius: 8px;" />
                                     </div>

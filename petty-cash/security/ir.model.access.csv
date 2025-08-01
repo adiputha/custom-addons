@@ -31,4 +31,12 @@ access_float_customization_manager,float.customization.manager,model_float_custo
 access_float_customization_admin,float.customization.admin,model_float_customization,base.group_system,1,1,1,1
 access_float_customization_accountant,float.customization.accountant,model_float_customization,account.group_account_user,1,1,1,1
 
+access_float_denomination_user,float.denomination.user,model_float_denomination,base.group_user,1,1,1,0
+access_float_denomination_manager,float.denomination.manager,model_float_denomination,base.group_erp_manager,1,1,1,1
+access_float_denomination_admin,float.denomination.admin,model_float_denomination,base.group_system,1,1,1,1
+access_float_denomination_accountant,float.denomination.accountant,model_float_denomination,account.group_account_user,1,1,1,1
+
+
+
 access_cash_denomination_wizard_user,cash.denomination.wizard.user,model_cash_denomination_wizard,base.group_user,1,1,1,1
+access_initial_denomination_wizard_user,initial.denomination.wizard.user,model_initial_denomination_wizard,base.group_user,1,1,1,1

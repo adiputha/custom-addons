@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="initial_denomination_wizard_form" model="ir.ui.view">
+        <field name="name">initial.denomination.wizard.form</field>
+        <field name="model">initial.denomination.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Setup Initial Denominations">
+                <header>
+                    <div class="alert alert-info mb-3">
+                        <h6 class="mb-1">💰 Initial Denomination Setup</h6>
+                        <small>Enter the actual cash denominations for this float</small>
+                    </div>
+                </header>
+
+                <sheet>
+                    <!-- Float Information -->
+                    <group string="Float Information">
+                        <group>
+                            <field name="float_name" readonly="1" />
+                            <field name="initial_amount" widget="monetary" readonly="1" />
+                        </group>
+                        <group>
+                            <field name="calculated_total" widget="monetary" readonly="1"
+                                decoration-success="is_balanced"
+                                decoration-danger="not is_balanced" />
+                            <field name="difference" widget="monetary" readonly="1"
+                                decoration-success="is_balanced"
+                                decoration-danger="not is_balanced" />
+                            <field name="is_balanced" invisible="1" />
+                        </group>
+                    </group>
+
+                    <!-- Auto Calculate Button -->
+                    <div class="text-center mb-3">
+                        <button name="action_auto_calculate" string="Auto Calculate Breakdown"
+                            type="object" class="btn-info" />
+                        <span class="text-muted ml-2">
+                            <small>Click to automatically calculate optimal denomination breakdown</small>
+                        </span>
+                    </div>
+
+                    <!-- Denomination Entry -->
+                    <group string="Enter Denomination Quantities">
+                        <group string="Paper Notes">
+                            <field name="denom_5000_qty" string="Rs. 5,000 Notes" />
+                            <field name="denom_1000_qty" string="Rs. 1,000 Notes" />
+                            <field name="denom_500_qty" string="Rs. 500 Notes" />
+                            <field name="denom_100_qty" string="Rs. 100 Notes" />
+                            <field name="denom_50_qty" string="Rs. 50 Notes" />
+                            <field name="denom_20_qty" string="Rs. 20 Notes" />
+                        </group>
+                        <group string="Coins">
+                            <field name="denom_10_qty" string="Rs. 10 Coins" />
+                            <field name="denom_5_qty" string="Rs. 5 Coins" />
+                            <field name="denom_2_qty" string="Rs. 2 Coins" />
+                            <field name="denom_1_qty" string="Rs. 1 Coins" />
+                        </group>
+                    </group>
+
+                    <!-- Balance Information -->
+                    <group string="Balance Check">
+                        <div class="alert alert-success" invisible="not is_balanced">
+                            <strong>✓ Balanced:</strong> Total matches float amount perfectly! </div>
+                        <div class="alert alert-warning" invisible="is_balanced">
+                            <strong>⚠ Not Balanced:</strong>
+                            <span invisible="difference &lt;= 0"> Total is Rs. <field
+                                    name="difference" readonly="1" nolabel="1" /> more than float
+                                amount. </span>
+                            <span invisible="difference &gt; 0"> Total is Rs. <field
+                                    name="difference" readonly="1" nolabel="1" /> less than float
+                                amount. </span>
+                        </div>
+                    </group>
+                </sheet>
+
+                <footer>
+                    <button name="action_create_denomination" string="Setup Denominations"
+                        type="object" class="btn-primary"
+                        invisible="not is_balanced" />
+                    <button name="action_cancel" string="Cancel" type="object"
+                        class="btn-secondary" />
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

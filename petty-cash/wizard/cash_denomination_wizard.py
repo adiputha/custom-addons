@@ -20,17 +20,25 @@ class CashDenominationWizard(models.TransientModel):
     request_number = fields.Char(
         string='Request Number',
         readonly=True,
+        compute='_compute_request_details',
+        store=True,
+        help="The number of the petty cash or IOU request associated with this denomination."
     )
     
     requested_amount = fields.Float(
         string='Request Amount',
         readonly=True,
+        compute='_compute_request_details',
+        store=True,
+        help="The amount requested in the petty cash or IOU request."
     )
     
     request_type = fields.Selection([
         ('petty_cash', 'Petty Cash'),
         ('iou', 'IOU')
-    ], string='Request Type', readonly=True)
+    ], string='Request Type', readonly=True, compute='_compute_request_details', store=True,
+        help="The type of request associated with this denomination (Petty Cash or IOU)."
+    )
     
     selected_amount = fields.Float(
         string='Selected Amount',
@@ -40,8 +48,10 @@ class CashDenominationWizard(models.TransientModel):
     
     cash_in_hand = fields.Float(
         string='Cash in Hand',
-        default=15000.00, #needs to be dynamic based on actual cash in hand come from petty cash float
+        default='_compute_cash_in_hand',
+        help="The total cash available in hand for denomination.",
         readonly=True,
+        store=True,
     )
     
     is_cash_balanced = fields.Boolean(
@@ -68,17 +78,17 @@ class CashDenominationWizard(models.TransientModel):
     denom_1_qty = fields.Integer(string='Rs. 1 Quantity', default=0)
     
     # Available denomination quantities (in hand)
-    denom_5000_available = fields.Integer(string='Rs. 5,000 Available', default=2, readonly=True)
-    denom_1000_available = fields.Integer(string='Rs. 1,000 Available', default=5, readonly=True)
-    denom_500_available = fields.Integer(string='Rs. 500 Available', default=4, readonly=True)
-    denom_100_available = fields.Integer(string='Rs. 100 Available', default=10, readonly=True)
-    denom_50_available = fields.Integer(string='Rs. 50 Available', default=8, readonly=True)
-    denom_20_available = fields.Integer(string='Rs. 20 Available', default=10, readonly=True)
-    denom_10_available = fields.Integer(string='Rs. 10 Available', default=10, readonly=True)
-    denom_5_available = fields.Integer(string='Rs. 5 Available', default=10, readonly=True)
-    denom_2_available = fields.Integer(string='Rs. 2 Available', default=10, readonly=True)
-    denom_1_available = fields.Integer(string='Rs. 1 Available', default=10, readonly=True)
-    
+    denom_5000_available = fields.Integer(string='Rs. 5,000 Available', compute='_compute_available_denominations', store=True)
+    denom_1000_available = fields.Integer(string='Rs. 1,000 Available', compute='_compute_available_denominations', store=True)
+    denom_500_available = fields.Integer(string='Rs. 500 Available', compute='_compute_available_denominations', store=True)
+    denom_100_available = fields.Integer(string='Rs. 100 Available', compute='_compute_available_denominations', store=True)
+    denom_50_available = fields.Integer(string='Rs. 50 Available', compute='_compute_available_denominations', store=True)
+    denom_20_available = fields.Integer(string='Rs. 20 Available', compute='_compute_available_denominations', store=True)
+    denom_10_available = fields.Integer(string='Rs. 10 Available', compute='_compute_available_denominations', store=True)
+    denom_5_available = fields.Integer(string='Rs. 5 Available', compute='_compute_available_denominations', store=True)
+    denom_2_available = fields.Integer(string='Rs. 2 Available', compute='_compute_available_denominations', store=True)
+    denom_1_available = fields.Integer(string='Rs. 1 Available', compute='_compute_available_denominations', store=True)
+
     # Balance denomination fields (shown when is_cash_balanced is True)
     balance_5000_qty = fields.Integer(string='Balance Rs. 5,000', default=0)
     balance_1000_qty = fields.Integer(string='Balance Rs. 1,000', default=0)
@@ -104,13 +114,27 @@ class CashDenominationWizard(models.TransientModel):
             if record.request_id:
                 record.request_number = record.request_id.name
                 record.requested_amount = record.request_id.request_amount
+                record.request_type = 'petty_cash'
             elif record.iou_request_id:
                 record.request_number = record.iou_request_id.name
                 record.requested_amount = record.iou_request_id.request_amount
+                record.request_type = 'iou'
             else:
                 record.request_number = ''
                 record.requested_amount = 0.0
-    
+                record.request_type = False
+                
+    @api.depends('request_id', 'iou_request_id')
+    def _compute_available_denominations(self):
+        for record in self:
+            float_request = None
+            if record.request_id:
+                float_request = record.request_id.float_request_id
+            elif record.iou_request_id:
+                float_request = record.iou_request_id.float_request_id
+    # Needs to continued from here
+                
+
     @api.model
     def default_get(self, fields_list):
         defaults = super().default_get(fields_list)

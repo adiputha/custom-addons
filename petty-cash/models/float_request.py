@@ -132,6 +132,110 @@ class FloatRequest(models.Model):
         help='Total IOU amount requested against this float'
     )
     
+    denomination_ids = fields.One2many(
+        'float.denomination',
+        'float_request_id',
+        string='Denominations',
+        help='Denominations used in this float request.'
+    )
+    
+    current_denomination_id = fields.Many2one(
+        'float.denomination',
+        string='Current Denomination',
+        help='Current denomination used for this float request.',
+        compute='_compute_current_denomination',
+        store=True
+    )
+    
+    @api.depends('denomination_ids')
+    def _compute_current_denomination(self):
+        for record in self:
+            if record.denomination_ids:
+                record.current_denomination_id = record.denomination_ids.sorted('last_updated', reversed=True)[0]
+            else:
+                record.current_denomination_id = False
+                
+    def create_initial_denomination_record(self):
+        """Create an initial denomination record for the float request."""
+        self.ensure_one()
+        if not self.denomination_ids and self.state == 'approved':
+            
+            intial_amount = self.initial_amount
+            denom_data = self._calculate_initial_denominations(intial_amount)
+            
+            self.env['float.denomination'].create({
+                'float_request_id': self.id,
+                **denom_data
+            })
+            
+    def _calculate_initial_denominations(self, amount):
+        """Calculate the initial denominations based on the given amount."""
+        
+        remaining_amount = amount
+
+        denom_5000 = min(int(remaining_amount / 5000), 10)  # Max 10 notes of 5000
+        remaining_amount -= denom_5000 * 5000
+
+        denom_1000 = min(int(remaining_amount / 1000), 20)  # Max 20 notes of 1000
+        remaining_amount -= denom_1000 * 1000
+
+        denom_500 = min(int(remaining_amount / 500), 20)
+        remaining_amount -= denom_500 * 500
+
+        denom_100 = min(int(remaining_amount / 100), 50)
+        remaining_amount -= denom_100 * 100
+        
+        denom_50 = min(int(remaining_amount / 50), 20)
+        remaining_amount -= denom_50 * 50
+        
+        denom_20 = min(int(remaining_amount / 20), 50)
+        remaining_amount -= denom_20 * 20
+        
+        denom_10 = min(int(remaining_amount / 10), 100)
+        remaining_amount -= denom_10 * 10
+        
+        denom_5 = min(int(remaining_amount / 5), 100)
+        remaining_amount -= denom_5 * 5
+        
+        denom_2 = min(int(remaining_amount / 2), 100)
+        remaining_amount -= denom_2 * 2
+        
+        denom_1 = int(remaining_amount)
+    
+        return {
+            'denom_5000_qty': denom_5000,
+            'denom_1000_qty': denom_1000,
+            'denom_500_qty': denom_500,
+            'denom_100_qty': denom_100,
+            'denom_50_qty': denom_50,
+            'denom_20_qty': denom_20,
+            'denom_10_qty': denom_10,
+            'denom_5_qty': denom_5,
+            'denom_2_qty': denom_2,
+            'denom_1_qty': denom_1,
+        }
+        
+    def action_approve(self):
+        """Override to create initial denomination record"""
+        result = super().action_approve()
+        for record in self:
+            record.create_initial_denomination_record()
+        return result
+    
+    def action_view_denominations(self):
+        """Open the denomination records for this float"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': f'Denominations - {self.name}',
+            'res_model': 'float.denomination',
+            'view_mode': 'list,form',
+            'domain': [('float_request_id', '=', self.id)],
+            'context': {
+                'default_float_request_id': self.id,
+            }
+        }
+    
     @api.depends('iou_request_id', 'petty_cash_request_id')
     def _compute_request_totals(self):
         for record in self:

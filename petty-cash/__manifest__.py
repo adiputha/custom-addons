@@ -13,19 +13,27 @@
     "data": [
         # security
         "security/ir.model.access.csv",
+        
         # data
         "data/sequence_data.xml",
+        
         # wizard
         "wizard/cash_denomination_wizard_view.xml",
         "wizard/cash_denomination_iou_wizard_view.xml",
+        "wizard/initial_denomination_wizard_view.xml",
+        
         # views
         "views/float_customization_views.xml",
+        "views/float_request_views.xml",
+        "views/float_denomination_views.xml",
+        
         "views/iou_request_views.xml",
-        "views/petty_cash_list_views.xml",
         "views/iou_request_list_views.xml",
+        
+        "views/petty_cash_list_views.xml",
         "views/petty_cash_category_views.xml",
         "views/petty_cash_request_views.xml",
-        "views/float_request_views.xml",
+        
         
         "views/petty_cash_menu.xml",
     ],

@@ -260,7 +260,7 @@ class PettyCashRequest(models.Model):
                 "type": "ir.actions.act_window",
                 "res_model": "cash.denomination.wizard",
                 "view_mode": "form",
-                #'view_id': self.env.ref('petty_cash_request.cash_denomination_wizard_form'),
+                "view_id": self.env.ref('petty-cash.cash_denomination_wizard_form').id,
                 "target": "new",
                 "context": {
                     "default_request_id": self.id,

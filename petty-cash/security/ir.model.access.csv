@@ -10,7 +10,6 @@ access_petty_cash_category_manager,petty.cash.category.manager,model_petty_cash_
 access_petty_cash_category_admin,petty.cash.category.admin,model_petty_cash_category,base.group_system,1,1,1,1
 access_petty_cash_category_accountant,petty.cash.category.accountant,model_petty_cash_category,account.group_account_user,1,1,1,1
 
-
 access_iou_request_user,petty.cash.iou.request.user,model_petty_cash_iou_request,base.group_user,1,1,1,0
 access_iou_request_manager,petty.cash.iou.request.manager,model_petty_cash_iou_request,base.group_erp_manager,1,1,1,1
 access_iou_request_admin,petty.cash.iou.request.admin,model_petty_cash_iou_request,base.group_system,1,1,1,1
@@ -36,7 +35,12 @@ access_float_denomination_manager,float.denomination.manager,model_float_denomin
 access_float_denomination_admin,float.denomination.admin,model_float_denomination,base.group_system,1,1,1,1
 access_float_denomination_accountant,float.denomination.accountant,model_float_denomination,account.group_account_user,1,1,1,1
 
-
-
 access_cash_denomination_wizard_user,cash.denomination.wizard.user,model_cash_denomination_wizard,base.group_user,1,1,1,1
+access_cash_denomination_wizard_manager,cash.denomination.wizard.manager,model_cash_denomination_wizard,base.group_erp_manager,1,1,1,1
+access_cash_denomination_wizard_admin,cash.denomination.wizard.admin,model_cash_denomination_wizard,base.group_system,1,1,1,1
+access_cash_denomination_wizard_accountant,cash.denomination.wizard.accountant,model_cash_denomination_wizard,account.group_account_user,1,1,1,1
+
 access_initial_denomination_wizard_user,initial.denomination.wizard.user,model_initial_denomination_wizard,base.group_user,1,1,1,1
+access_initial_denomination_wizard_manager,initial.denomination.wizard.manager,model_initial_denomination_wizard,base.group_erp_manager,1,1,1,1
+access_initial_denomination_wizard_admin,initial.denomination.wizard.admin,model_initial_denomination_wizard,base.group_system,1,1,1,1
+access_initial_denomination_wizard_accountant,initial.denomination.wizard.accountant,model_initial_denomination_wizard,account.group_account_user,1,1,1,1

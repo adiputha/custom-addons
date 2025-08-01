@@ -1,6 +1,10 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
+import logging
+
+_logger = logging.getLogger(__name__)
+
 
 class CashDenominationWizard(models.TransientModel):
     _name = "cash.denomination.wizard"
@@ -65,6 +69,18 @@ class CashDenominationWizard(models.TransientModel):
     balance_amount = fields.Float(
         string="Balance Amount",
         compute="_compute_balance_amount",
+        store=True,
+    )
+
+    amount_difference = fields.Float(
+        string="Amount Difference",
+        compute="_compute_amount_difference",
+        store=True,
+    )
+
+    is_amount_matched = fields.Boolean(
+        string="Is Amount Matched",
+        compute="_compute_amount_difference",
         store=True,
     )
 
@@ -144,6 +160,13 @@ class CashDenominationWizard(models.TransientModel):
         store=True,
     )
 
+    @api.depends("selected_amount", "requested_amount")
+    def _compute_amount_difference(self):
+        for record in self:
+            difference = abs(record.selected_amount - record.requested_amount)
+            record.amount_difference = difference
+            record.is_amount_matched = difference < 0.01
+
     @api.depends("request_id", "iou_request_id")
     def _compute_request_details(self):
         for record in self:
@@ -169,9 +192,15 @@ class CashDenominationWizard(models.TransientModel):
             elif record.iou_request_id:
                 float_request = record.iou_request_id.float_request_id
 
-            if float_request and float_request.current_denomination_id:
-                # Get current denomination from the float
-                current_denom = float_request.current_denomination_id
+        if float_request:
+            # Debug: Log the float request
+            _logger.info(f"Float request found: {float_request.name}")
+
+            # Get the current denomination - use the computed field
+            current_denom = float_request.current_denomination_id
+
+            if current_denom:
+                _logger.info(f"Current denomination found: {current_denom.id}")
                 record.denom_5000_available = current_denom.denom_5000_qty
                 record.denom_1000_available = current_denom.denom_1000_qty
                 record.denom_500_available = current_denom.denom_500_qty
@@ -183,17 +212,53 @@ class CashDenominationWizard(models.TransientModel):
                 record.denom_2_available = current_denom.denom_2_qty
                 record.denom_1_available = current_denom.denom_1_qty
             else:
-                # Set all to 0 if no denomination found
-                record.denom_5000_available = 0
-                record.denom_1000_available = 0
-                record.denom_500_available = 0
-                record.denom_100_available = 0
-                record.denom_50_available = 0
-                record.denom_20_available = 0
-                record.denom_10_available = 0
-                record.denom_5_available = 0
-                record.denom_2_available = 0
-                record.denom_1_available = 0
+                # If no current denomination, try to get the latest one manually
+                latest_denom = record.env["float.denomination"].search(
+                    [("float_request_id", "=", float_request.id)],
+                    order="last_updated desc",
+                    limit=1,
+                )
+
+                if latest_denom:
+                    _logger.info(f"Latest denomination found: {latest_denom.id}")
+                    record.denom_5000_available = latest_denom.denom_5000_qty
+                    record.denom_1000_available = latest_denom.denom_1000_qty
+                    record.denom_500_available = latest_denom.denom_500_qty
+                    record.denom_100_available = latest_denom.denom_100_qty
+                    record.denom_50_available = latest_denom.denom_50_qty
+                    record.denom_20_available = latest_denom.denom_20_qty
+                    record.denom_10_available = latest_denom.denom_10_qty
+                    record.denom_5_available = latest_denom.denom_5_qty
+                    record.denom_2_available = latest_denom.denom_2_qty
+                    record.denom_1_available = latest_denom.denom_1_qty
+                else:
+                    _logger.warning(
+                        f"No denomination record found for float: {float_request.name}"
+                    )
+                    # Set all to 0 if no denomination found
+                    record.denom_5000_available = 0
+                    record.denom_1000_available = 0
+                    record.denom_500_available = 0
+                    record.denom_100_available = 0
+                    record.denom_50_available = 0
+                    record.denom_20_available = 0
+                    record.denom_10_available = 0
+                    record.denom_5_available = 0
+                    record.denom_2_available = 0
+                    record.denom_1_available = 0
+        else:
+            _logger.warning("No float request found")
+            # Set all to 0 if no float request found
+            record.denom_5000_available = 0
+            record.denom_1000_available = 0
+            record.denom_500_available = 0
+            record.denom_100_available = 0
+            record.denom_50_available = 0
+            record.denom_20_available = 0
+            record.denom_10_available = 0
+            record.denom_5_available = 0
+            record.denom_2_available = 0
+            record.denom_1_available = 0
 
     @api.depends("request_id", "iou_request_id")
     def _compute_cash_in_hand(self):
@@ -212,6 +277,8 @@ class CashDenominationWizard(models.TransientModel):
     @api.model
     def default_get(self, fields_list):
         defaults = super().default_get(fields_list)
+
+        _logger.info(f"Context in default_get: {self.env.context}")
 
         if self.env.context.get("default_request_id"):
             request_id = self.env.context.get("default_request_id")

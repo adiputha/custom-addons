@@ -25,40 +25,27 @@ class CashDenominationWizard(models.TransientModel):
     request_number = fields.Char(
         string="Request Number",
         readonly=True,
-        compute="_compute_request_details",
-        store=True,
-        help="The number of the petty cash or IOU request associated with this denomination.",
     )
 
     requested_amount = fields.Float(
         string="Request Amount",
         readonly=True,
-        compute="_compute_request_details",
-        store=True,
-        help="The amount requested in the petty cash or IOU request.",
     )
 
     request_type = fields.Selection(
         [("petty_cash", "Petty Cash"), ("iou", "IOU")],
         string="Request Type",
         readonly=True,
-        compute="_compute_request_details",
-        store=True,
-        help="The type of request associated with this denomination (Petty Cash or IOU).",
     )
 
     selected_amount = fields.Float(
         string="Selected Amount",
         compute="_compute_selected_amount",
-        store=True,
     )
 
     cash_in_hand = fields.Float(
         string="Cash in Hand",
-        compute="_compute_cash_in_hand",
-        help="The total cash available in hand for denomination.",
         readonly=True,
-        store=True,
     )
 
     is_cash_balanced = fields.Boolean(
@@ -69,19 +56,16 @@ class CashDenominationWizard(models.TransientModel):
     balance_amount = fields.Float(
         string="Balance Amount",
         compute="_compute_balance_amount",
-        store=True,
     )
 
     amount_difference = fields.Float(
         string="Amount Difference",
         compute="_compute_amount_difference",
-        store=True,
     )
 
     is_amount_matched = fields.Boolean(
         string="Is Amount Matched",
         compute="_compute_amount_difference",
-        store=True,
     )
 
     # Denomination fields
@@ -96,53 +80,39 @@ class CashDenominationWizard(models.TransientModel):
     denom_2_qty = fields.Integer(string="Rs. 2 Quantity", default=0)
     denom_1_qty = fields.Integer(string="Rs. 1 Quantity", default=0)
 
-    # Available denomination quantities (in hand)
+    # Available denomination quantities - Regular fields, not computed
     denom_5000_available = fields.Integer(
-        string="Rs. 5,000 Available",
-        compute="_compute_available_denominations",
-        store=True,
+        string="Rs. 5,000 Available", readonly=True, default=0
     )
     denom_1000_available = fields.Integer(
-        string="Rs. 1,000 Available",
-        compute="_compute_available_denominations",
-        store=True,
+        string="Rs. 1,000 Available", readonly=True, default=0
     )
     denom_500_available = fields.Integer(
-        string="Rs. 500 Available",
-        compute="_compute_available_denominations",
-        store=True,
+        string="Rs. 500 Available", readonly=True, default=0
     )
     denom_100_available = fields.Integer(
-        string="Rs. 100 Available",
-        compute="_compute_available_denominations",
-        store=True,
+        string="Rs. 100 Available", readonly=True, default=0
     )
     denom_50_available = fields.Integer(
-        string="Rs. 50 Available",
-        compute="_compute_available_denominations",
-        store=True,
+        string="Rs. 50 Available", readonly=True, default=0
     )
     denom_20_available = fields.Integer(
-        string="Rs. 20 Available",
-        compute="_compute_available_denominations",
-        store=True,
+        string="Rs. 20 Available", readonly=True, default=0
     )
     denom_10_available = fields.Integer(
-        string="Rs. 10 Available",
-        compute="_compute_available_denominations",
-        store=True,
+        string="Rs. 10 Available", readonly=True, default=0
     )
     denom_5_available = fields.Integer(
-        string="Rs. 5 Available", compute="_compute_available_denominations", store=True
+        string="Rs. 5 Available", readonly=True, default=0
     )
     denom_2_available = fields.Integer(
-        string="Rs. 2 Available", compute="_compute_available_denominations", store=True
+        string="Rs. 2 Available", readonly=True, default=0
     )
     denom_1_available = fields.Integer(
-        string="Rs. 1 Available", compute="_compute_available_denominations", store=True
+        string="Rs. 1 Available", readonly=True, default=0
     )
 
-    # Balance denomination fields (shown when is_cash_balanced is True)
+    # Balance denomination fields
     balance_5000_qty = fields.Integer(string="Balance Rs. 5,000", default=0)
     balance_1000_qty = fields.Integer(string="Balance Rs. 1,000", default=0)
     balance_500_qty = fields.Integer(string="Balance Rs. 500", default=0)
@@ -153,11 +123,21 @@ class CashDenominationWizard(models.TransientModel):
     balance_5_qty = fields.Integer(string="Balance Rs. 5", default=0)
     balance_2_qty = fields.Integer(string="Balance Rs. 2", default=0)
     balance_1_qty = fields.Integer(string="Balance Rs. 1", default=0)
+    
+    balance_5000_available = fields.Integer(string="Balance Rs. 5,000 Available", readonly=True, default=0)
+    balance_1000_available = fields.Integer(string="Balance Rs. 1,000 Available", readonly=True, default=0)
+    balance_500_available = fields.Integer(string="Balance Rs. 500 Available", readonly=True, default=0)
+    balance_100_available = fields.Integer(string="Balance Rs. 100 Available", readonly=True, default=0)
+    balance_50_available = fields.Integer(string="Balance Rs. 50 Available", readonly=True, default=0)
+    balance_20_available = fields.Integer(string="Balance Rs. 20 Available", readonly=True, default=0)
+    balance_10_available = fields.Integer(string="Balance Rs. 10 Available", readonly=True, default=0)
+    balance_5_available = fields.Integer(string="Balance Rs. 5 Available", readonly=True, default=0)
+    balance_2_available = fields.Integer(string="Balance Rs. 2 Available", readonly=True, default=0)
+    balance_1_available = fields.Integer(string="Balance Rs. 1 Available", readonly=True, default=0)
 
     selected_balance_amount = fields.Float(
         string="Selected Balance Amount",
         compute="_compute_selected_balance_amount",
-        store=True,
     )
 
     @api.depends("selected_amount", "requested_amount")
@@ -166,139 +146,6 @@ class CashDenominationWizard(models.TransientModel):
             difference = abs(record.selected_amount - record.requested_amount)
             record.amount_difference = difference
             record.is_amount_matched = difference < 0.01
-
-    @api.depends("request_id", "iou_request_id")
-    def _compute_request_details(self):
-        for record in self:
-            if record.request_id:
-                record.request_number = record.request_id.name
-                record.requested_amount = record.request_id.request_amount
-                record.request_type = "petty_cash"
-            elif record.iou_request_id:
-                record.request_number = record.iou_request_id.name
-                record.requested_amount = record.iou_request_id.request_amount
-                record.request_type = "iou"
-            else:
-                record.request_number = ""
-                record.requested_amount = 0.0
-                record.request_type = False
-
-    @api.depends("request_id", "iou_request_id")
-    def _compute_available_denominations(self):
-        for record in self:
-            float_request = None
-            if record.request_id:
-                float_request = record.request_id.float_request_id
-            elif record.iou_request_id:
-                float_request = record.iou_request_id.float_request_id
-
-        if float_request:
-            # Debug: Log the float request
-            _logger.info(f"Float request found: {float_request.name}")
-
-            # Get the current denomination - use the computed field
-            current_denom = float_request.current_denomination_id
-
-            if current_denom:
-                _logger.info(f"Current denomination found: {current_denom.id}")
-                record.denom_5000_available = current_denom.denom_5000_qty
-                record.denom_1000_available = current_denom.denom_1000_qty
-                record.denom_500_available = current_denom.denom_500_qty
-                record.denom_100_available = current_denom.denom_100_qty
-                record.denom_50_available = current_denom.denom_50_qty
-                record.denom_20_available = current_denom.denom_20_qty
-                record.denom_10_available = current_denom.denom_10_qty
-                record.denom_5_available = current_denom.denom_5_qty
-                record.denom_2_available = current_denom.denom_2_qty
-                record.denom_1_available = current_denom.denom_1_qty
-            else:
-                # If no current denomination, try to get the latest one manually
-                latest_denom = record.env["float.denomination"].search(
-                    [("float_request_id", "=", float_request.id)],
-                    order="last_updated desc",
-                    limit=1,
-                )
-
-                if latest_denom:
-                    _logger.info(f"Latest denomination found: {latest_denom.id}")
-                    record.denom_5000_available = latest_denom.denom_5000_qty
-                    record.denom_1000_available = latest_denom.denom_1000_qty
-                    record.denom_500_available = latest_denom.denom_500_qty
-                    record.denom_100_available = latest_denom.denom_100_qty
-                    record.denom_50_available = latest_denom.denom_50_qty
-                    record.denom_20_available = latest_denom.denom_20_qty
-                    record.denom_10_available = latest_denom.denom_10_qty
-                    record.denom_5_available = latest_denom.denom_5_qty
-                    record.denom_2_available = latest_denom.denom_2_qty
-                    record.denom_1_available = latest_denom.denom_1_qty
-                else:
-                    _logger.warning(
-                        f"No denomination record found for float: {float_request.name}"
-                    )
-                    # Set all to 0 if no denomination found
-                    record.denom_5000_available = 0
-                    record.denom_1000_available = 0
-                    record.denom_500_available = 0
-                    record.denom_100_available = 0
-                    record.denom_50_available = 0
-                    record.denom_20_available = 0
-                    record.denom_10_available = 0
-                    record.denom_5_available = 0
-                    record.denom_2_available = 0
-                    record.denom_1_available = 0
-        else:
-            _logger.warning("No float request found")
-            # Set all to 0 if no float request found
-            record.denom_5000_available = 0
-            record.denom_1000_available = 0
-            record.denom_500_available = 0
-            record.denom_100_available = 0
-            record.denom_50_available = 0
-            record.denom_20_available = 0
-            record.denom_10_available = 0
-            record.denom_5_available = 0
-            record.denom_2_available = 0
-            record.denom_1_available = 0
-
-    @api.depends("request_id", "iou_request_id")
-    def _compute_cash_in_hand(self):
-        for record in self:
-            float_request = None
-            if record.request_id:
-                float_request = record.request_id.float_request_id
-            elif record.iou_request_id:
-                float_request = record.iou_request_id.float_request_id
-
-            if float_request:
-                record.cash_in_hand = float_request.cash_in_hand
-            else:
-                record.cash_in_hand = 0.0
-
-    @api.model
-    def default_get(self, fields_list):
-        defaults = super().default_get(fields_list)
-
-        _logger.info(f"Context in default_get: {self.env.context}")
-
-        if self.env.context.get("default_request_id"):
-            request_id = self.env.context.get("default_request_id")
-            defaults["request_id"] = request_id
-
-            request = self.env["petty.cash.request"].browse(request_id)
-            if request.exists():
-                defaults["request_number"] = request.name
-                defaults["requested_amount"] = request.request_amount
-
-        elif self.env.context.get("default_iou_request_id"):
-            iou_request_id = self.env.context.get("default_iou_request_id")
-            defaults["iou_request_id"] = iou_request_id
-
-            iou_request = self.env["petty.cash.iou.request"].browse(iou_request_id)
-            if iou_request.exists():
-                defaults["request_number"] = iou_request.name
-                defaults["requested_amount"] = iou_request.request_amount
-
-        return defaults
 
     @api.depends(
         "denom_5000_qty",
@@ -361,6 +208,192 @@ class CashDenominationWizard(models.TransientModel):
             )
             record.selected_balance_amount = amount
 
+    @api.model
+    def default_get(self, fields_list):
+        """Set default values including available denominations"""
+        defaults = super().default_get(fields_list)
+
+        _logger.info(f"Context in default_get: {self.env.context}")
+        _logger.info(f"Fields requested: {fields_list}")
+
+        try:
+            if self.env.context.get("default_request_id"):
+                request_id = self.env.context.get("default_request_id")
+                defaults["request_id"] = request_id
+
+                request = self.env["petty.cash.request"].browse(request_id)
+                if request.exists():
+                    defaults["request_number"] = request.name
+                    defaults["requested_amount"] = request.request_amount
+                    defaults["request_type"] = "petty_cash"
+
+                    # Load float and denomination data
+                    float_request = request.float_request_id
+                    if float_request:
+                        defaults["cash_in_hand"] = float_request.cash_in_hand
+
+                        # Load available denominations
+                        denom_data = self._get_denomination_data(float_request)
+                        defaults.update(denom_data)
+
+                        _logger.info(f"Loaded denomination data: {denom_data}")
+
+            elif self.env.context.get("default_iou_request_id"):
+                iou_request_id = self.env.context.get("default_iou_request_id")
+                defaults["iou_request_id"] = iou_request_id
+
+                iou_request = self.env["petty.cash.iou.request"].browse(iou_request_id)
+                if iou_request.exists():
+                    defaults["request_number"] = iou_request.name
+                    defaults["requested_amount"] = iou_request.request_amount
+                    defaults["request_type"] = "iou"
+
+                    # Load float and denomination data
+                    float_request = iou_request.float_request_id
+                    if float_request:
+                        defaults["cash_in_hand"] = float_request.cash_in_hand
+
+                        # Load available denominations
+                        denom_data = self._get_denomination_data(float_request)
+                        defaults.update(denom_data)
+
+                        _logger.info(f"Loaded denomination data: {denom_data}")
+
+        except Exception as e:
+            _logger.error(f"Error in default_get: {e}")
+            # Set default values to prevent errors
+            defaults.update(
+                {
+                    "request_number": "",
+                    "requested_amount": 0.0,
+                    "cash_in_hand": 0.0,
+                    "denom_5000_available": 0,
+                    "denom_1000_available": 0,
+                    "denom_500_available": 0,
+                    "denom_100_available": 0,
+                    "denom_50_available": 0,
+                    "denom_20_available": 0,
+                    "denom_10_available": 0,
+                    "denom_5_available": 0,
+                    "denom_2_available": 0,
+                    "denom_1_available": 0,
+                }
+            )
+
+        return defaults
+
+    def _get_denomination_data(self, float_request):
+        """Get denomination data from float request"""
+        # Search for the latest denomination record
+        current_denom = self.env["float.denomination"].search(
+            [("float_request_id", "=", float_request.id)],
+            order="last_updated desc",
+            limit=1,
+        )
+
+        if current_denom:
+            _logger.info(
+                f"Found denomination record: {current_denom.id} with total: {current_denom.total_amount}"
+            )
+            return {
+                "denom_5000_available": current_denom.denom_5000_qty,
+                "denom_1000_available": current_denom.denom_1000_qty,
+                "denom_500_available": current_denom.denom_500_qty,
+                "denom_100_available": current_denom.denom_100_qty,
+                "denom_50_available": current_denom.denom_50_qty,
+                "denom_20_available": current_denom.denom_20_qty,
+                "denom_10_available": current_denom.denom_10_qty,
+                "denom_5_available": current_denom.denom_5_qty,
+                "denom_2_available": current_denom.denom_2_qty,
+                "denom_1_available": current_denom.denom_1_qty,
+            }
+        else:
+            _logger.warning(
+                f"No denomination record found for float: {float_request.name}"
+            )
+            return {
+                "denom_5000_available": 0,
+                "denom_1000_available": 0,
+                "denom_500_available": 0,
+                "denom_100_available": 0,
+                "denom_50_available": 0,
+                "denom_20_available": 0,
+                "denom_10_available": 0,
+                "denom_5_available": 0,
+                "denom_2_available": 0,
+                "denom_1_available": 0,
+            }
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Override create to ensure proper initialization"""
+        records = super().create(vals_list)
+
+        for record in records:
+            # If denominations weren't loaded in default_get, load them now
+            if hasattr(record, "request_id") or hasattr(record, "iou_request_id"):
+                if all(
+                    getattr(record, f"denom_{d}_available", 0) == 0
+                    for d in [
+                        "5000",
+                        "1000",
+                        "500",
+                        "100",
+                        "50",
+                        "20",
+                        "10",
+                        "5",
+                        "2",
+                        "1",
+                    ]
+                ):
+                    record._load_denominations()
+
+        return records
+
+    def _load_denominations(self):
+        """Load denominations for the current record"""
+        self.ensure_one()
+
+        float_request = None
+        if self.request_id:
+            float_request = self.request_id.float_request_id
+            if not self.request_number:
+                self.request_number = self.request_id.name
+                self.requested_amount = self.request_id.request_amount
+                self.request_type = "petty_cash"
+        elif self.iou_request_id:
+            float_request = self.iou_request_id.float_request_id
+            if not self.request_number:
+                self.request_number = self.iou_request_id.name
+                self.requested_amount = self.iou_request_id.request_amount
+                self.request_type = "iou"
+
+        if float_request:
+            self.cash_in_hand = float_request.cash_in_hand
+            denom_data = self._get_denomination_data(float_request)
+
+            # Update the record with denomination data
+            for field, value in denom_data.items():
+                setattr(self, field, value)
+
+            _logger.info(f"Loaded denominations for record {self.id}")
+
+    def refresh_available_amounts(self):
+        """Refresh available denominations"""
+        self.ensure_one()
+        self._load_denominations()
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Refreshed"),
+                "message": _("Available denominations refreshed successfully."),
+                "type": "success",
+            },
+        }
+
     @api.constrains(
         "denom_5000_qty",
         "denom_1000_qty",
@@ -375,145 +408,65 @@ class CashDenominationWizard(models.TransientModel):
     )
     def _check_available_denominations(self):
         for record in self:
-            if record.denom_5000_qty > record.denom_5000_available:
-                raise UserError(_("Not enough Rs. 5,000 notes available"))
-            if record.denom_1000_qty > record.denom_1000_available:
-                raise UserError(_("Not enough Rs. 1,000 notes available"))
-            if record.denom_500_qty > record.denom_500_available:
-                raise UserError(_("Not enough Rs. 500 notes available"))
-            if record.denom_100_qty > record.denom_100_available:
-                raise UserError(_("Not enough Rs. 100 notes available"))
-            if record.denom_50_qty > record.denom_50_available:
-                raise UserError(_("Not enough Rs. 50 notes available"))
-            if record.denom_20_qty > record.denom_20_available:
-                raise UserError(_("Not enough Rs. 20 notes available"))
-            if record.denom_10_qty > record.denom_10_available:
-                raise UserError(_("Not enough Rs. 10 notes available"))
-            if record.denom_5_qty > record.denom_5_available:
-                raise UserError(_("Not enough Rs. 5 coins available"))
-            if record.denom_2_qty > record.denom_2_available:
-                raise UserError(_("Not enough Rs. 2 coins available"))
-            if record.denom_1_qty > record.denom_1_available:
-                raise UserError(_("Not enough Rs. 1 coins available"))
+            errors = []
 
-    def action_update_amount(self):
-        """Update the denomination and process the request"""
-        self.ensure_one()
+            checks = [
+                (record.denom_5000_qty, record.denom_5000_available, "Rs. 5,000"),
+                (record.denom_1000_qty, record.denom_1000_available, "Rs. 1,000"),
+                (record.denom_500_qty, record.denom_500_available, "Rs. 500"),
+                (record.denom_100_qty, record.denom_100_available, "Rs. 100"),
+                (record.denom_50_qty, record.denom_50_available, "Rs. 50"),
+                (record.denom_20_qty, record.denom_20_available, "Rs. 20"),
+                (record.denom_10_qty, record.denom_10_available, "Rs. 10"),
+                (record.denom_5_qty, record.denom_5_available, "Rs. 5"),
+                (record.denom_2_qty, record.denom_2_available, "Rs. 2"),
+                (record.denom_1_qty, record.denom_1_available, "Rs. 1"),
+            ]
 
-        # Validate selected amount
-        if self.is_cash_balanced:
-            expected_amount = self.requested_amount + self.selected_balance_amount
-            if abs(self.selected_amount - expected_amount) > 0.01:
-                raise UserError(
-                    _("Selected amount does not match the expected amount.")
+            for needed, available, denomination in checks:
+                if needed > available:
+                    errors.append(
+                        f"{denomination}: Need {needed}, Available {available}"
+                    )
+
+            if errors:
+                error_msg = _("Not enough denominations available:\n") + "\n".join(
+                    errors
                 )
-        else:
-            if abs(self.selected_amount - self.requested_amount) > 0.01:
-                raise UserError(
-                    _("Selected amount does not match the requested amount.")
+                raise UserError(error_msg)
+            
+    def _check_balance_denominations(self):
+        for record in self:
+            if not record.is_cash_balanced:
+                continue
+            errors = []
+            checks = [
+                (record.balance_5000_qty, record.denom_5000_available, "Rs. 5,000"),
+                (record.balance_1000_qty, record.denom_1000_available, "Rs. 1,000"),
+                (record.balance_500_qty, record.denom_500_available, "Rs. 500"),
+                (record.balance_100_qty, record.denom_100_available, "Rs. 100"),
+                (record.balance_50_qty, record.denom_50_available, "Rs. 50"),
+                (record.balance_20_qty, record.denom_20_available, "Rs. 20"),
+                (record.balance_10_qty, record.denom_10_available, "Rs. 10"),
+                (record.balance_5_qty, record.denom_5_available, "Rs. 5"),
+                (record.balance_2_qty, record.denom_2_available, "Rs. 2"),
+                (record.balance_1_qty, record.denom_1_available, "Rs. 1"),
+            ]
+            
+            for needed, available, denomination in checks:
+                if needed > available:
+                    errors.append(
+                        f"{denomination}: Need {needed}, Available {available}"
+                    )
+                    
+            if errors:
+                error_msg = _("Not enough balance denominations available:\n") + "\n".join(
+                    errors
                 )
-
-        # Get float request and current denomination
-        float_request = None
-        if self.request_id:
-            float_request = self.request_id.float_request_id
-        elif self.iou_request_id:
-            float_request = self.iou_request_id.float_request_id
-
-        if not float_request:
-            raise UserError(_("No float request found."))
-
-        # Update denomination in float
-        if float_request.current_denomination_id:
-            current_denom = float_request.current_denomination_id
-
-            # Create dictionary of denominations used
-            denomination_used = {
-                "denom_5000_qty": self.denom_5000_qty,
-                "denom_1000_qty": self.denom_1000_qty,
-                "denom_500_qty": self.denom_500_qty,
-                "denom_100_qty": self.denom_100_qty,
-                "denom_50_qty": self.denom_50_qty,
-                "denom_20_qty": self.denom_20_qty,
-                "denom_10_qty": self.denom_10_qty,
-                "denom_5_qty": self.denom_5_qty,
-                "denom_2_qty": self.denom_2_qty,
-                "denom_1_qty": self.denom_1_qty,
-            }
-
-            # Update the denomination record
-            current_denom.update_denomination_after_reimbursement(denomination_used)
-
-        # Create denomination details message
-        denomination_details = self._create_denomination_message()
-
-        # Update request state and add message
-        if self.request_id:
-            self.request_id.state = "cash_issued"
-            self.request_id.message_post(body=denomination_details)
-        elif self.iou_request_id:
-            self.iou_request_id.state = "pending_bill_submission"
-            self.iou_request_id.cashReceivedByEmployee = True
-            self.iou_request_id.message_post(body=denomination_details)
-
-        return {
-            "type": "ir.actions.act_window_close",
-        }
-
-    def _create_denomination_message(self):
-        """Create a detailed message showing denomination breakdown"""
-        message = f"""
-        <h4>💰 Cash Issued Details:</h4>
-        <table class="table table-sm">
-            <thead>
-                <tr><th>Denomination</th><th>Quantity</th><th>Amount</th></tr>
-            </thead>
-            <tbody>
-        """
-
-        denominations = [
-            (5000, self.denom_5000_qty, "Rs. 5,000"),
-            (1000, self.denom_1000_qty, "Rs. 1,000"),
-            (500, self.denom_500_qty, "Rs. 500"),
-            (100, self.denom_100_qty, "Rs. 100"),
-            (50, self.denom_50_qty, "Rs. 50"),
-            (20, self.denom_20_qty, "Rs. 20"),
-            (10, self.denom_10_qty, "Rs. 10"),
-            (5, self.denom_5_qty, "Rs. 5"),
-            (2, self.denom_2_qty, "Rs. 2"),
-            (1, self.denom_1_qty, "Rs. 1"),
-        ]
-
-        for value, qty, label in denominations:
-            if qty > 0:
-                amount = value * qty
-                message += f"""
-                <tr>
-                    <td>{label}</td>
-                    <td>{qty}</td>
-                    <td>Rs. {amount:,.2f}</td>
-                </tr>
-                """
-
-        message += f"""
-            </tbody>
-            <tfoot>
-                <tr><th>Total Cash Issued:</th><th></th><th>Rs. {self.selected_amount:,.2f}</th></tr>
-            </tfoot>
-        </table>
-        """
-
-        if self.is_cash_balanced:
-            message += f"""
-            <div class="alert alert-info">
-                <strong>Balance Given:</strong> Rs. {self.selected_balance_amount:,.2f}
-            </div>
-            """
-
-        return message
+                raise UserError(error_msg)
 
     def action_auto_calculate(self):
-        """Auto-calculate denomination breakdown based on requested amount"""
+        """Auto-calculate denomination breakdown"""
         self.ensure_one()
 
         amount = self.requested_amount
@@ -572,15 +525,125 @@ class CashDenominationWizard(models.TransientModel):
             "tag": "display_notification",
             "params": {
                 "title": _("Auto-calculated"),
-                "message": _(
-                    "Denomination breakdown has been automatically calculated."
-                ),
+                "message": _("Denomination breakdown calculated successfully."),
                 "type": "success",
             },
         }
 
-    def action_cancel(self):
-        """Cancel the cash denomination wizard"""
+    def action_update_amount(self):
+        """Update the denomination and process the request"""
+        self.ensure_one()
+
+        # Validate selected amount
+        if self.is_cash_balanced:
+            expected_amount = self.requested_amount + self.selected_balance_amount
+            if abs(self.selected_amount - expected_amount) > 0.01:
+                raise UserError(
+                    _("Selected amount does not match the expected amount.")
+                )
+        else:
+            if abs(self.selected_amount - self.requested_amount) > 0.01:
+                raise UserError(
+                    _("Selected amount does not match the requested amount.")
+                )
+
+        # Get float request
+        float_request = None
+        if self.request_id:
+            float_request = self.request_id.float_request_id
+        elif self.iou_request_id:
+            float_request = self.iou_request_id.float_request_id
+
+        if not float_request:
+            raise UserError(_("No float request found."))
+
+        # Get current denomination and update it
+        current_denom = self.env["float.denomination"].search(
+            [("float_request_id", "=", float_request.id)],
+            order="last_updated desc",
+            limit=1,
+        )
+
+        if current_denom:
+            denomination_used = {
+                "denom_5000_qty": self.denom_5000_qty,
+                "denom_1000_qty": self.denom_1000_qty,
+                "denom_500_qty": self.denom_500_qty,
+                "denom_100_qty": self.denom_100_qty,
+                "denom_50_qty": self.denom_50_qty,
+                "denom_20_qty": self.denom_20_qty,
+                "denom_10_qty": self.denom_10_qty,
+                "denom_5_qty": self.denom_5_qty,
+                "denom_2_qty": self.denom_2_qty,
+                "denom_1_qty": self.denom_1_qty,
+            }
+
+            current_denom.update_denomination_after_reimbursement(denomination_used)
+
+        # Create message and update request state
+        denomination_details = self._create_denomination_message()
+
+        if self.request_id:
+            self.request_id.state = "cash_issued"
+            self.request_id.message_post(body=denomination_details)
+        elif self.iou_request_id:
+            self.iou_request_id.state = "pending_bill_submission"
+            self.iou_request_id.cashReceivedByEmployee = True
+            self.iou_request_id.message_post(body=denomination_details)
+
         return {
             "type": "ir.actions.act_window_close",
         }
+
+    def _create_denomination_message(self):
+        """Create denomination breakdown message"""
+        message = f"""
+        <h4>💰 Cash Issued Details:</h4>
+        <table class="table table-sm">
+            <thead>
+                <tr><th>Denomination</th><th>Quantity</th><th>Amount</th></tr>
+            </thead>
+            <tbody>
+        """
+
+        denominations = [
+            (5000, self.denom_5000_qty, "Rs. 5,000"),
+            (1000, self.denom_1000_qty, "Rs. 1,000"),
+            (500, self.denom_500_qty, "Rs. 500"),
+            (100, self.denom_100_qty, "Rs. 100"),
+            (50, self.denom_50_qty, "Rs. 50"),
+            (20, self.denom_20_qty, "Rs. 20"),
+            (10, self.denom_10_qty, "Rs. 10"),
+            (5, self.denom_5_qty, "Rs. 5"),
+            (2, self.denom_2_qty, "Rs. 2"),
+            (1, self.denom_1_qty, "Rs. 1"),
+        ]
+
+        for value, qty, label in denominations:
+            if qty > 0:
+                amount = value * qty
+                message += f"""
+                <tr>
+                    <td>{label}</td>
+                    <td>{qty}</td>
+                    <td>Rs. {amount:,.2f}</td>
+                </tr>
+                """
+
+        message += f"""
+            </tbody>
+            <tfoot>
+                <tr><th>Total:</th><th></th><th>Rs. {self.selected_amount:,.2f}</th></tr>
+            </tfoot>
+        </table>
+        """
+
+        return message
+
+    def action_cancel(self):
+        """Cancel the wizard"""
+        return {
+            "type": "ir.actions.act_window_close",
+        }
+        
+    

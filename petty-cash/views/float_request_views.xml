@@ -131,6 +131,10 @@
                         type="object" class="btn-danger"
                         invisible="state != 'requested'"
                         groups="account.group_account_manager" />
+                    <button name="action_setup_denominations" string="Setup Denominations"
+                        type="object" class="btn-info"
+                        invisible="state != 'approved' or current_denomination_id"
+                        help="Setup initial cash denominations for this float" />
                     <button name="action_reset_to_draft" string="Reset to Draft"
                         type="object" class="btn-secondary"
                         invisible="state != 'rejected'" />
@@ -149,12 +153,43 @@
                             <field name="total_iou_requests" widget="statinfo"
                                 string="IOU Requests" />
                         </button>
+                        <button name="action_view_denominations" type="object"
+                            class="oe_stat_button" icon="fa-calculator"
+                            invisible="not current_denomination_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="current_denomination_id" readonly="1" />
+                                </span>
+                                <span class="o_stat_text">Denominations</span>
+                            </div>
+                        </button>
+                        <button name="action_setup_denominations" type="object"
+                            class="oe_stat_button" icon="fa-cog"
+                            invisible="state != 'approved' or current_denomination_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value text-warning">
+                                    <i class="fa fa-exclamation-triangle"></i>
+                                </span>
+                                <span class="o_stat_text">Setup Required</span>
+                            </div>
+                        </button>
                         <!-- <button name="action_view_all_requests" type="object"
                             class="oe_stat_button" icon="fa-list">
                             <field name="total_requests" widget="statinfo"
                                 string="Total Requests" />
                         </button> -->
                     </div>
+                    <div class="alert alert-info" invisible="state != 'draft'">
+                        <div class="d-flex align-items-center">
+                            <i class="fa fa-info-circle me-2"></i>
+                            <div>
+                                <strong>Draft Float Request</strong>
+                                <p class="mb-0">Fill in all required fields and submit for approval
+                                    when ready.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="oe_title">
                         <h1>
                             <field name="name" placeholder="Float Name (e.g., Marketing Float)"
@@ -217,9 +252,22 @@
                     </group>
                     <group string="Denomination Count"
                         invisible="state != 'approved' or not current_denomination_id">
-                        <field name="current_denomination_id" readonly="1" />
-                        <field name="denomination_ids" mode="list" readonly="1">
-                            <list>
+                        <div class="alert alert-info" invisible="current_denomination_id">
+                            <div class="d-flex align-items-center">
+                                <i class="fa fa-info-circle me-2"></i>
+                                <div>
+                                    <strong>Denomination Setup Required</strong>
+                                    <p class="mb-0">Click "Setup Denominations" to configure the
+                                        initial cash breakdown for this float.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <field name="current_denomination_id" readonly="1"
+                            invisible="not current_denomination_id" />
+                        <field name="denomination_ids" mode="list" readonly="1"
+                            invisible="not current_denomination_id">
+                            <list decoration-success="total_amount > 0">
                                 <field name="denom_5000_qty" string="Rs. 5,000" />
                                 <field name="denom_1000_qty" string="Rs. 1,000" />
                                 <field name="denom_500_qty" string="Rs. 500" />
@@ -230,8 +278,8 @@
                                 <field name="denom_5_qty" string="Rs. 5" />
                                 <field name="denom_2_qty" string="Rs. 2" />
                                 <field name="denom_1_qty" string="Rs. 1" />
-                                <field name="total_amount" widget="monetary" />
-                                <field name="last_updated" />
+                                <field name="total_amount" widget="monetary" string="Total" />
+                                <field name="last_updated" string="Last Updated" />
                             </list>
                         </field>
                     </group>

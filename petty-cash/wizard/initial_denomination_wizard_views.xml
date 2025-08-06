@@ -4,83 +4,471 @@
         <field name="name">initial.denomination.wizard.form</field>
         <field name="model">initial.denomination.wizard</field>
         <field name="arch" type="xml">
-            <form string="Setup Initial Denominations">
+            <form string="Initial Denomination Setup">
                 <header>
-                    <div class="alert alert-info mb-3">
-                        <h6 class="mb-1">💰 Initial Denomination Setup</h6>
-                        <small>Enter the actual cash denominations for this float</small>
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3" style="font-size: 2rem;">💰</div>
+                            <div>
+                                <h5 class="mb-1">Initial Denomination Setup</h5>
+                                <small>Configure the cash denominations for your float</small>
+                            </div>
+                        </div>
                     </div>
                 </header>
 
                 <sheet>
-                    <!-- Float Information -->
-                    <group string="Float Information">
-                        <group>
-                            <field name="float_name" readonly="1" />
-                            <field name="initial_amount" widget="monetary" readonly="1" />
-                        </group>
-                        <group>
-                            <field name="calculated_total" widget="monetary" readonly="1"
-                                decoration-success="is_balanced"
-                                decoration-danger="not is_balanced" />
-                            <field name="difference" widget="monetary" readonly="1"
-                                decoration-success="is_balanced"
-                                decoration-danger="not is_balanced" />
-                            <field name="is_balanced" invisible="1" />
-                        </group>
-                    </group>
+                    <!-- Float Information Card -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fa fa-info-circle me-2"></i>Float Information </h6>
+                                </div>
+                                <div class="card-body py-3">
+                                    <div class="row g-4">
+                                        <div class="col-md-4">
+                                            <div class="text-center text-md-start">
+                                                <div class="text-muted fw-bold mb-1"
+                                                    style="font-size: 0.7em; letter-spacing: 1px;">FLOAT
+                                                    NAME</div>
+                                                <div class="fw-bold text-dark"
+                                                    style="font-size: 1rem; line-height: 1.2;">
+                                                    <field name="float_name" readonly="1"
+                                                        nolabel="1" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center text-md-start">
+                                                <div class="text-muted fw-bold mb-1"
+                                                    style="font-size: 0.7em; letter-spacing: 1px;">
+                                                    DEPARTMENT</div>
+                                                <div class="fw-bold text-dark"
+                                                    style="font-size: 1rem; line-height: 1.2;">
+                                                    <field name="department_name" readonly="1"
+                                                        nolabel="1" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center text-md-start">
+                                                <div class="text-muted fw-bold mb-1"
+                                                    style="font-size: 0.7em; letter-spacing: 1px;">FLOAT
+                                                    AMOUNT</div>
+                                                <div class="fw-bold text-primary"
+                                                    style="font-size: 1.25rem; line-height: 1.2;">
+                                                    <field name="initial_amount" widget="monetary"
+                                                        readonly="1" nolabel="1" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    <!-- Auto Calculate Button -->
-                    <div class="text-center mb-3">
-                        <button name="action_auto_calculate" string="Auto Calculate Breakdown"
-                            type="object" class="btn-info" />
-                        <span class="text-muted ml-2">
-                            <small>Click to automatically calculate optimal denomination breakdown</small>
-                        </span>
+                    <!-- Setup Method Selection -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fa fa-cog me-2"></i>Setup Method </h6>
+                                </div>
+                                <div class="card-body">
+                                    <field name="setup_method" widget="radio" class="o_horizontal" />
+
+                                    <!-- Template Options -->
+                                    <div class="mt-3" invisible="setup_method != 'template'">
+                                        <label for="template_type" class="form-label">Choose
+                                            Template:</label>
+                                        <field name="template_type" widget="radio"
+                                            class="o_horizontal" />
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                <strong>Balanced Mix:</strong> Good mix for general
+                                                use | <strong>Large Notes:</strong> Fewer notes,
+                                                easier counting | <strong>Small Change:</strong>
+                                                Better for making change </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button name="action_auto_calculate" string="Auto Calculate"
+                                    type="object" class="btn btn-success">
+                                    <i class="fa fa-magic me-1"></i>Auto Calculate </button>
+                                <button name="action_clear_all" string="Clear All"
+                                    type="object" class="btn btn-warning">
+                                    <i class="fa fa-eraser me-1"></i>Clear All </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Denomination Entry -->
-                    <group string="Enter Denomination Quantities">
-                        <group string="Paper Notes">
-                            <field name="denom_5000_qty" string="Rs. 5,000 Notes" />
-                            <field name="denom_1000_qty" string="Rs. 1,000 Notes" />
-                            <field name="denom_500_qty" string="Rs. 500 Notes" />
-                            <field name="denom_100_qty" string="Rs. 100 Notes" />
-                            <field name="denom_50_qty" string="Rs. 50 Notes" />
-                            <field name="denom_20_qty" string="Rs. 20 Notes" />
-                        </group>
-                        <group string="Coins">
-                            <field name="denom_10_qty" string="Rs. 10 Coins" />
-                            <field name="denom_5_qty" string="Rs. 5 Coins" />
-                            <field name="denom_2_qty" string="Rs. 2 Coins" />
-                            <field name="denom_1_qty" string="Rs. 1 Coins" />
-                        </group>
-                    </group>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fa fa-money me-2"></i>Denomination Quantities </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <!-- Paper Notes -->
+                                        <div class="col-md-6">
+                                            <h6 class="text-primary mb-3">💵 Paper Notes</h6>
 
-                    <!-- Balance Information -->
-                    <group string="Balance Check">
-                        <div class="alert alert-success" invisible="not is_balanced">
-                            <strong>✓ Balanced:</strong> Total matches float amount perfectly! </div>
-                        <div class="alert alert-warning" invisible="is_balanced">
-                            <strong>⚠ Not Balanced:</strong>
-                            <span invisible="difference &lt;= 0"> Total is Rs. <field
-                                    name="difference" readonly="1" nolabel="1" /> more than float
-                                amount. </span>
-                            <span invisible="difference &gt; 0"> Total is Rs. <field
-                                    name="difference" readonly="1" nolabel="1" /> less than float
-                                amount. </span>
+                                            <!-- Rs. 5000 -->
+                                            <div
+                                                class="denomination-row mb-3 p-3 border rounded bg-light">
+                                                <div class="row align-items-center">
+                                                    <div class="col-4">
+                                                        <label for="denom_5000_qty"
+                                                            class="form-label fw-bold text-danger mb-0">Rs.
+                                                            5,000</label>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_5000_qty"
+                                                            class="form-control text-center" />
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_5000_amount"
+                                                            widget="monetary" readonly="1"
+                                                            class="form-control-plaintext text-end fw-bold" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Rs. 1000 -->
+                                            <div
+                                                class="denomination-row mb-3 p-3 border rounded bg-light">
+                                                <div class="row align-items-center">
+                                                    <div class="col-4">
+                                                        <label for="denom_1000_qty"
+                                                            class="form-label fw-bold text-warning mb-0">Rs.
+                                                            1,000</label>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_1000_qty"
+                                                            class="form-control text-center" />
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_1000_amount"
+                                                            widget="monetary" readonly="1"
+                                                            class="form-control-plaintext text-end fw-bold" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Rs. 500 -->
+                                            <div
+                                                class="denomination-row mb-3 p-3 border rounded bg-light">
+                                                <div class="row align-items-center">
+                                                    <div class="col-4">
+                                                        <label for="denom_500_qty"
+                                                            class="form-label fw-bold text-success mb-0">Rs.
+                                                            500</label>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_500_qty"
+                                                            class="form-control text-center" />
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_500_amount"
+                                                            widget="monetary" readonly="1"
+                                                            class="form-control-plaintext text-end fw-bold" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Rs. 100 -->
+                                            <div
+                                                class="denomination-row mb-3 p-3 border rounded bg-light">
+                                                <div class="row align-items-center">
+                                                    <div class="col-4">
+                                                        <label for="denom_100_qty"
+                                                            class="form-label fw-bold text-primary mb-0">Rs.
+                                                            100</label>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_100_qty"
+                                                            class="form-control text-center" />
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_100_amount"
+                                                            widget="monetary" readonly="1"
+                                                            class="form-control-plaintext text-end fw-bold" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Rs. 50 -->
+                                            <div
+                                                class="denomination-row mb-3 p-3 border rounded bg-light">
+                                                <div class="row align-items-center">
+                                                    <div class="col-4">
+                                                        <label for="denom_50_qty"
+                                                            class="form-label fw-bold text-info mb-0">Rs.
+                                                            50</label>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_50_qty"
+                                                            class="form-control text-center" />
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_50_amount"
+                                                            widget="monetary" readonly="1"
+                                                            class="form-control-plaintext text-end fw-bold" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Rs. 20 -->
+                                            <div
+                                                class="denomination-row mb-3 p-3 border rounded bg-light">
+                                                <div class="row align-items-center">
+                                                    <div class="col-4">
+                                                        <label for="denom_20_qty"
+                                                            class="form-label fw-bold text-dark mb-0">Rs.
+                                                            20</label>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_20_qty"
+                                                            class="form-control text-center" />
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_20_amount"
+                                                            widget="monetary" readonly="1"
+                                                            class="form-control-plaintext text-end fw-bold" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Coins -->
+                                        <div class="col-md-6">
+                                            <h6 class="text-secondary mb-3">🪙 Coins</h6>
+
+                                            <!-- Rs. 10 -->
+                                            <div
+                                                class="denomination-row mb-3 p-3 border rounded bg-light">
+                                                <div class="row align-items-center">
+                                                    <div class="col-4">
+                                                        <label for="denom_10_qty"
+                                                            class="form-label fw-bold text-warning mb-0">Rs.
+                                                            10</label>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_10_qty"
+                                                            class="form-control text-center" />
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_10_amount"
+                                                            widget="monetary" readonly="1"
+                                                            class="form-control-plaintext text-end fw-bold" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Rs. 5 -->
+                                            <div
+                                                class="denomination-row mb-3 p-3 border rounded bg-light">
+                                                <div class="row align-items-center">
+                                                    <div class="col-4">
+                                                        <label for="denom_5_qty"
+                                                            class="form-label fw-bold text-dark mb-0">Rs.
+                                                            5</label>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_5_qty"
+                                                            class="form-control text-center" />
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_5_amount"
+                                                            widget="monetary" readonly="1"
+                                                            class="form-control-plaintext text-end fw-bold" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Rs. 2 -->
+                                            <div
+                                                class="denomination-row mb-3 p-3 border rounded bg-light">
+                                                <div class="row align-items-center">
+                                                    <div class="col-4">
+                                                        <label for="denom_2_qty"
+                                                            class="form-label fw-bold text-primary mb-0">Rs.
+                                                            2</label>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_2_qty"
+                                                            class="form-control text-center" />
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_2_amount"
+                                                            widget="monetary" readonly="1"
+                                                            class="form-control-plaintext text-end fw-bold" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Rs. 1 -->
+                                            <div
+                                                class="denomination-row mb-3 p-3 border rounded bg-light">
+                                                <div class="row align-items-center">
+                                                    <div class="col-4">
+                                                        <label for="denom_1_qty"
+                                                            class="form-label fw-bold text-warning mb-0">Rs.
+                                                            1</label>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_1_qty"
+                                                            class="form-control text-center" />
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <field name="denom_1_amount"
+                                                            widget="monetary" readonly="1"
+                                                            class="form-control-plaintext text-end fw-bold" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </group>
+                    </div>
+
+                    <!-- Balance Summary -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card" decoration-success="is_balanced"
+                                decoration-warning="not is_balanced">
+                                <div class="card-header"
+                                    style="background-color: var(--bs-success); color: white;"
+                                    invisible="not is_balanced">
+                                    <h6 class="mb-0">
+                                        <i class="fa fa-check-circle me-2"></i>✅ Perfect Balance! </h6>
+                                </div>
+                                <div class="card-header"
+                                    style="background-color: var(--bs-warning); color: white;"
+                                    invisible="is_balanced">
+                                    <h6 class="mb-0">
+                                        <i class="fa fa-exclamation-triangle me-2"></i>⚠️ Balance
+                                        Check </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-md-4">
+                                            <div class="border-end">
+                                                <h5 class="text-primary mb-0">
+                                                    <field name="initial_amount" widget="monetary"
+                                                        readonly="1" />
+                                                </h5>
+                                                <small class="text-muted">Target Amount</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="border-end">
+                                                <h5 class="mb-0"
+                                                    decoration-success="is_balanced"
+                                                    decoration-warning="not is_balanced">
+                                                    <field name="calculated_total" widget="monetary"
+                                                        readonly="1" />
+                                                </h5>
+                                                <small class="text-muted">Calculated Total</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h5 class="mb-0"
+                                                decoration-success="is_balanced"
+                                                decoration-danger="not is_balanced">
+                                                <field name="difference" widget="monetary"
+                                                    readonly="1" />
+                                            </h5>
+                                            <small class="text-muted">Difference</small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Balance Status Messages -->
+                                    <div class="mt-3">
+                                        <div class="alert alert-success d-flex align-items-center"
+                                            invisible="not is_balanced">
+                                            <i class="fa fa-check-circle me-2"></i>
+                                            <div>
+                                                <strong>Perfect Balance!</strong> Your denomination
+                                                total matches the float amount exactly. You can now
+                                                proceed to create the denomination record. </div>
+                                        </div>
+
+                                        <div class="alert alert-warning d-flex align-items-center"
+                                            invisible="is_balanced">
+                                            <i class="fa fa-exclamation-triangle me-2"></i>
+                                            <div>
+                                                <strong>Balance Required:</strong>
+                                                <span invisible="difference &lt;= 0"> You have Rs. <field
+                                                        name="difference" readonly="1" nolabel="1" />
+                                                    more than needed. Please reduce some
+                                                    denominations. </span>
+                                                <span invisible="difference &gt; 0"> You need Rs. <field
+                                                        name="difference" readonly="1" nolabel="1"
+                                                        style="color: inherit;" /> more. Please add
+                                                    more denominations. </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields -->
+                    <field name="float_request_id" invisible="1" />
+                    <field name="is_balanced" invisible="1" />
                 </sheet>
 
                 <footer>
-                    <button name="action_create_denomination" string="Setup Denominations"
-                        type="object" class="btn-primary"
-                        invisible="not is_balanced" />
-                    <button name="action_cancel" string="Cancel" type="object"
-                        class="btn-secondary" />
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">
+                                <i class="fa fa-lightbulb-o me-1"></i> Tip: Use "Auto Calculate" for
+                                optimal denomination distribution </small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button string="Cancel" special="cancel" class="btn btn-secondary">
+                                <i class="fa fa-times me-1"></i>Cancel </button>
+                            <button name="action_create_denomination" string="Setup Denominations"
+                                type="object" class="btn btn-primary"
+                                invisible="not is_balanced">
+                                <i class="fa fa-check me-1"></i>Setup Denominations </button>
+                            <button string="Balance Required" class="btn btn-outline-warning"
+                                disabled="1" invisible="is_balanced">
+                                <i class="fa fa-exclamation-triangle me-1"></i>Balance Required </button>
+                        </div>
+                    </div>
                 </footer>
             </form>
         </field>
+    </record>
+
+    <!-- Action for Initial Denomination Wizard -->
+    <record id="action_initial_denomination_wizard" model="ir.actions.act_window">
+        <field name="name">Setup Initial Denominations</field>
+        <field name="res_model">initial.denomination.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{
+            'default_float_request_id': active_id,
+            }</field>
     </record>
 </odoo>

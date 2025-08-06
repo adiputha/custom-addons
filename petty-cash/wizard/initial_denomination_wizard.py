@@ -13,6 +13,7 @@ class InitialDenominationWizard(models.TransientModel):
         "float.request",
         string="Float Request",
         required=True,
+        readonly=True,
         help="The float request for which initial denominations are being set.",
     )
 
@@ -27,6 +28,36 @@ class InitialDenominationWizard(models.TransientModel):
         string="Initial Amount",
         related="float_request_id.initial_amount",
         readonly=True,
+    )
+
+    department_name = fields.Char(
+        related="float_request_id.department_id.name",
+        string="Department",
+        readonly=True,
+    )
+
+    setup_method = fields.Selection(
+        [
+            ("auto", "Auto Calculate (Recommended)"),
+            ("manual", "Manual Entry"),
+            ("template", "Use Template"),
+        ],
+        string="setup Method",
+        default="auto",
+        required=True,
+        help="Choose how to set up the initial denominations.",
+    )
+
+    template_type = fields.Selection(
+        [
+            ("balanced", "Balanced Mix"),
+            ("large_notes", "Prefer Large Notes"),
+            ("small_change", "More Small Change"),
+            ("custom", "Custom Template"),
+        ],
+        string="Template Type",
+        default="balanced",
+        help="Select a template for denomination setup.",
     )
 
     # Denomination fields
@@ -60,49 +91,64 @@ class InitialDenominationWizard(models.TransientModel):
         help="Indicates if the total denominations match the float request's initial amount.",
     )
 
+    denom_5000_amount = fields.Float(
+        string="Rs. 5,000 Amount",
+        compute="_compute_denomination_amounts",
+    )
+    denom_1000_amount = fields.Float(
+        string="Rs. 1,000 Amount",
+        compute="_compute_denomination_amounts",
+    )
+    denom_500_amount = fields.Float(
+        string="Rs. 500 Amount",
+        compute="_compute_denomination_amounts",
+    )
+    denom_100_amount = fields.Float(
+        string="Rs. 100 Amount",
+        compute="_compute_denomination_amounts",
+    )
+    
+    denom_50_amount = fields.Float(
+        string="Rs. 50 Amount",
+        compute="_compute_denomination_amounts",
+    )
+    
+    denom_20_amount = fields.Float(
+        string="Rs. 20 Amount",
+        compute="_compute_denomination_amounts",
+    )
+    
+    denom_10_amount = fields.Float(
+        string="Rs. 10 Amount",
+        compute="_compute_denomination_amounts",
+    )
+    
+    denom_5_amount = fields.Float(
+        string="Rs. 5 Amount",
+        compute="_compute_denomination_amounts",
+    )
+    
+    denom_2_amount = fields.Float(
+        string="Rs. 2 Amount",
+        compute="_compute_denomination_amounts",
+    )
+    
+    denom_1_amount = fields.Float(
+        string="Rs. 1 Amount",
+        compute="_compute_denomination_amounts",
+    )
+
     @api.model
     def default_get(self, fields_list):
         defaults = super().default_get(fields_list)
 
-        _logger.info(f"Context keys: {list(self.env.context.keys())}")
-        _logger.info(f"Full context: {self.env.context}")
-
-        try:
-            if self.env.context.get("default_request_id"):
-                request_id = self.env.context.get("default_request_id")
-                defaults["request_id"] = request_id
-
-                request = self.env["petty.cash.request"].browse(request_id)
-                if request.exists():
-                    defaults["request_number"] = request.name or ""
-                    defaults["requested_amount"] = request.requested_amount or 0.0
-                    defaults["request_type"] = "petty_cash"
-
-            elif self.env.context.get("default_iou_request_id"):
-                iou_request_id = self.env.context.get("default_iou_request_id")
-                defaults["iou_request_id"] = iou_request_id
-
-                iou_request = self.env["iou.request"].browse(iou_request_id)
-                if iou_request.exists():
-                    defaults["request_number"] = iou_request.name or ""
-                    defaults["requested_amount"] = iou_request.requested_amount or 0.0
-                    defaults["request_type"] = "iou"
-
-            if "float_request_id" in self.env.context:
-                float_id = self.env.context["float_request_id"]
-                if float_id:
-                    float_request = self.env["float.request"].browse(float_id)
-                    if float_request.exists():
-                        defaults["cash_in_hand"] = (
-                            float_request.cash_in_hand or 15000.00
-                        )
-
-        except Exception as e:
-
-            _logger.warning(f"Error in default_get: {e}")
-            defaults.setdefault("cash_in_hand", 15000.00)
-            defaults.setdefault("requested_amount", 0.0)
-            defaults.setdefault("request_number", "")
+        if (
+            self.env.context.get("active_id")
+            and self.env.context.get("active_model") == "float.request"
+        ):
+            defaults["float_request_id"] = self.env.context["active_id"]
+        elif self.env.context.get("default_float_request_id"):
+            defaults["float_request_id"] = self.env.context["default_float_request_id"]
 
         return defaults
 
@@ -206,14 +252,164 @@ class InitialDenominationWizard(models.TransientModel):
                         _("Denomination quantities cannot be negative.")
                     )
 
+    @api.depends(
+        "denom_5000_qty",
+        "denom_1000_qty",
+        "denom_500_qty",
+        "denom_100_qty",
+        "denom_50_qty",
+        "denom_20_qty",
+        "denom_10_qty",
+        "denom_5_qty",
+        "denom_2_qty",
+        "denom_1_qty",
+    )
+    def _compute_denomination_amounts(self):
+        for record in self:
+            record.denom_5000_amount = record.denom_5000_qty * 5000
+            record.denom_1000_amount = record.denom_1000_qty * 1000
+            record.denom_500_amount = record.denom_500_qty * 500
+            record.denom_100_amount = record.denom_100_qty * 100
+            record.denom_50_amount = record.denom_50_qty * 50
+            record.denom_20_amount = record.denom_20_qty * 20
+            record.denom_10_amount = record.denom_10_qty * 10  
+            record.denom_5_amount = record.denom_5_qty * 5
+            record.denom_2_amount = record.denom_2_qty * 2
+            record.denom_1_amount = record.denom_1_qty * 1
+
+    @api.onchange("setup_method")
+    def _onchange_setup_method(self):
+        """Auto-apply setup method changes"""
+        if self.setup_method == "auto":
+            self.action_auto_calculate()
+        elif self.setup_method == "template":
+            self._apply_template()
+
+    @api.onchange("template_type")
+    def _onchange_template_type(self):
+        """Auto-apply template type changes"""
+        if self.template_type == "template":
+            self._apply_template()
+
+    def _apply_template(self):
+        """Apply the selected template for denomination setup."""
+        amount = self.initial_amount
+
+        if self.template_type == "balanced":
+            breakdown = self._get_balanced_template(amount)
+        elif self.template_type == "large_notes":
+            breakdown = self._get_large_notes_template(amount)
+        elif self.template_type == "small_change":
+            breakdown = self._get_small_change_template(amount)
+        else:
+            return
+
+        for field, qty in breakdown.items():
+            setattr(self, field, qty)
+
+    def _get_balanced_template(self, amount):
+        """Balanced template for denomination setup."""
+        remaining = amount
+        breakdown = {}
+
+        large_amount = amount * 0.6  # 60% in large denominations
+        breakdown["denom_5000_qty"] = min(int(large_amount * 0.4 / 5000), 8)
+        remaining -= breakdown["denom_5000_qty"] * 5000
+
+        breakdown["denom_1000_qty"] = min(int(large_amount * 0.3 / 1000), 15)
+        remaining -= breakdown["denom_1000_qty"] * 1000
+
+        breakdown["denom_500_qty"] = min(int(large_amount * 0.2 / 500), 10)
+        remaining -= breakdown["denom_500_qty"] * 500
+
+        breakdown["denom_100_qty"] = min(int(large_amount * 0.6 / 100), 20)
+        remaining -= breakdown["denom_100_qty"] * 100
+
+        self._fill_remaining_optimally(breakdown, remaining)
+
+        return breakdown
+
+    def _get_large_notes_template(self, amount):
+        """Prefer larger denominations"""
+        remaining = amount
+        breakdown = {}
+
+        breakdown["denom_5000_qty"] = min(int(remaining / 5000), 10)
+        remaining -= breakdown["denom_5000_qty"] * 5000
+
+        breakdown["denom_1000_qty"] = min(int(remaining / 1000), 20)
+        remaining -= breakdown["denom_1000_qty"] * 1000
+
+        breakdown["denom_500_qty"] = min(int(remaining / 500), 8)
+        remaining -= breakdown["denom_500_qty"] * 500
+
+        self._fill_remaining_optimally(breakdown, remaining)
+
+        return breakdown
+
+    def _get_small_change_template(self, amount):
+        """More small change"""
+        remaining = amount
+        breakdown = {}
+
+        breakdown["denom_5000_qty"] = min(int(remaining * 0.3 / 5000), 5)
+        remaining -= breakdown["denom_5000_qty"] * 5000
+
+        breakdown["denom_1000_qty"] = min(int(remaining * 0.4 / 1000), 8)
+        remaining -= breakdown["denom_1000_qty"] * 1000
+
+        breakdown["denom_500_qty"] = min(int(remaining * 0.3 / 500), 15)
+        remaining -= breakdown["denom_500_qty"] * 500
+
+        breakdown["denom_100_qty"] = min(int(remaining * 0.4 / 100), 30)
+        remaining -= breakdown["denom_100_qty"] * 100
+
+        breakdown["denom_50_qty"] = min(int(remaining * 0.3 / 50), 20)
+        remaining -= breakdown["denom_50_qty"] * 50
+
+        breakdown["denom_20_qty"] = min(int(remaining * 0.4 / 20), 25)
+        remaining -= breakdown["denom_20_qty"] * 20
+
+        self._fill_remaining_optimally(breakdown, remaining)
+        return breakdown
+
+    def _fill_remaining_optimally(self, breakdown, remaining):
+        """Fill remaining amount with smaller denominations optimally."""
+        small_denoms = [
+            ("denom_100_qty", 100, 50),
+            ("denom_50_qty", 50, 20),
+            ("denom_20_qty", 20, 50),
+            ("denom_10_qty", 10, 100),
+            ("denom_5_qty", 5, 50),
+            ("denom_2_qty", 2, 50),
+            ("denom_1_qty", 1, 100),
+        ]
+
+        for field, value, max_qty in small_denoms:
+            if remaining <= 0:
+                breakdown.setdefault(field, 0)
+                continue
+
+            current_qty = breakdown.get(field, 0)
+            additional = min(int(remaining / value), max_qty - current_qty)
+            if additional > 0:
+                breakdown[field] = current_qty + additional
+                remaining -= additional * value
+            else:
+                breakdown.setdefault(field, 0)
+
     def action_auto_calculate(self):
         """Auto-calculate optimal denomination breakdown"""
         self.ensure_one()
-        suggested = self._suggest_denomination_breakdown(self.initial_amount)
+        amount = self.initial_amount
 
-        # Update the record with suggested values
-        for field_name, value in suggested.items():
-            setattr(self, field_name, value)
+        if amount <= 0:
+            raise UserError(_("Initial amount must be greater than zero."))
+
+        breakdown = self._get_balanced_template(amount)
+
+        for field, qty in breakdown.items():
+            setattr(self, field, qty)
 
         return {
             "type": "ir.actions.client",
@@ -221,9 +417,52 @@ class InitialDenominationWizard(models.TransientModel):
             "params": {
                 "title": _("Auto-calculated"),
                 "message": _(
-                    "Denomination breakdown has been automatically calculated."
+                    "Optimal denomination breakdown calculated successfully.."
                 ),
                 "type": "success",
+            },
+        }
+
+    def action_clear_all(self):
+        """Clear all denomination fields"""
+        self.ensure_one()
+        clear_values  = {
+            "denom_5000_qty": 0,
+            "denom_1000_qty": 0,
+            "denom_500_qty": 0,
+            "denom_100_qty": 0,
+            "denom_50_qty": 0,
+            "denom_20_qty": 0,
+            "denom_10_qty": 0,
+            "denom_5_qty": 0,
+            "denom_2_qty": 0,
+            "denom_1_qty": 0,
+        }
+        
+        try:
+
+            for field, value in clear_values.items():
+                setattr(self, field, value)
+                
+        except Exception as e:
+            return {
+            'type': 'ir.actions.act_window',
+            'name': 'Setup Initial Denominations',
+            'res_model': 'initial.denomination.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_float_request_id': self.float_request_id.id,
+            },
+        }
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Cleared"),
+                "message": _("All denomination quantities cleared."),
+                "type": "info",
             },
         }
 
@@ -236,7 +475,8 @@ class InitialDenominationWizard(models.TransientModel):
             raise UserError(
                 _(
                     "Total amount (Rs. %.2f) does not match float amount (Rs. %.2f). "
-                    "Difference: Rs. %.2f"
+                    "Difference: Rs. %.2f\n\n"
+                    "Please adjust the denominations to match the float request amount."
                 )
                 % (self.calculated_total, self.initial_amount, self.difference)
             )
@@ -247,9 +487,7 @@ class InitialDenominationWizard(models.TransientModel):
         )
 
         if existing_denomination:
-            raise UserError(
-                _("Initial denomination record already exists for this float.")
-            )
+            raise UserError(_("Initial denomination record already exists for this float."))
 
         # Create the denomination record
         denomination_data = {
@@ -266,21 +504,88 @@ class InitialDenominationWizard(models.TransientModel):
             "denom_1_qty": self.denom_1_qty,
         }
 
-        denomination_record = self.env["float.denomination"].create(denomination_data)
+        try:
+            # Create the denomination record
+            self.env["float.denomination"].create(denomination_data)
 
-        # Log message on float request
-        message = self._create_denomination_message()
-        self.float_request_id.message_post(body=message)
+            # Log message on float request
+            message = self._create_denomination_message()
+            self.float_request_id.message_post(body=message)
 
-        return {
-            "type": "ir.actions.client",
-            "tag": "display_notification",
-            "params": {
-                "title": _("Success"),
-                "message": _("Initial denomination record created successfully."),
-                "type": "success",
-            },
-        }
+            # Update float request current denomination
+            self.float_request_id._compute_current_denomination()
+
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": _("Success"),
+                    "message": _("Initial denomination record created successfully."),
+                    "type": "success",
+                    "sticky": False,
+                },
+            }
+
+        except Exception as e:
+            _logger.error("Error creating initial denomination: %s", e)
+            raise UserError(
+                _("Failed to create initial denomination record. Please try again.")
+            )
+            
+    def _create_success_message(self):
+        """Create a success message for the user"""
+        message = f"""
+        <div class="alert alert-success">
+            <h4>Initial Denomination Created Successfully!</h4>
+            <p><strong>Setup Method:</strong> {dict(self._fields['setup_method'].selection)[self.setup_method]}</p>
+
+        </div>
+        <table class="table table-sm table-striped">
+            <thead class="table-primary">
+                <tr>
+                    <th>Denomination</th>
+                    <th>Quantity</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+        """
+        
+        denominations = [
+            (5000, self.denom_5000_qty, "Rs. 5,000"),
+            (1000, self.denom_1000_qty, "Rs. 1,000"),
+            (500, self.denom_500_qty, "Rs. 500"),
+            (100, self.denom_100_qty, "Rs. 100"),
+            (50, self.denom_50_qty, "Rs. 50"),
+            (20, self.denom_20_qty, "Rs. 20"),
+            (10, self.denom_10_qty, "Rs. 10"),
+            (5, self.denom_5_qty, "Rs. 5"),
+            (2, self.denom_2_qty, "Rs. 2"),
+            (1, self.denom_1_qty, "Rs. 1"),
+        ]
+        
+        for value, qty, label in denominations:
+            if qty > 0:
+                amount = qty * value
+                message += f"""
+                <tr>
+                    <td>{label}</td>
+                    <td>{qty}</td>
+                    <td>Rs. {amount:,.2f}</td>
+                </tr>
+                """
+        message += f"""
+            </tbody>
+            <tfoot class="table-success">
+                <tr>
+                    <th>Total</th>
+                    <th></th>
+                    <th>Rs. {self.calculated_total:,.2f}</th>
+                </tr>
+            </tfoot>
+        </table>
+        """
+        return message
 
     def _create_denomination_message(self):
         """Create a message showing the denomination breakdown"""

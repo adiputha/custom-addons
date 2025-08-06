@@ -68,6 +68,7 @@ class FloatRequest(models.Model):
 
     remarks = fields.Text(
         string="Remarks",
+        help="Additional remarks or notes regarding the float request.",
     )
 
     attachment = fields.Binary(
@@ -162,70 +163,70 @@ class FloatRequest(models.Model):
                     limit=1,
                 )
 
-            record.current_denomination_id = (
-                latest_denomination.id if latest_denomination else False
-            )
-        else:
-            record.current_denomination_id = False
+                record.current_denomination_id = (
+                    latest_denomination.id if latest_denomination else False
+                )
+            else:
+                record.current_denomination_id = False
 
-    def create_initial_denomination_record(self):
-        """Create an initial denomination record for the float request."""
-        self.ensure_one()
-        if not self.denomination_ids and self.state == "approved":
+    # def create_initial_denomination_record(self):
+    #     """Create an initial denomination record for the float request."""
+    #     self.ensure_one()
+    #     if not self.denomination_ids and self.state == "approved":
 
-            intial_amount = self.initial_amount
-            denom_data = self._calculate_initial_denominations(intial_amount)
+    #         intial_amount = self.initial_amount
+    #         denom_data = self._calculate_initial_denominations(intial_amount)
 
-            self.env["float.denomination"].create(
-                {"float_request_id": self.id, **denom_data}
-            )
+    #         self.env["float.denomination"].create(
+    #             {"float_request_id": self.id, **denom_data}
+    #         )
 
-    def _calculate_initial_denominations(self, amount):
-        """Calculate the initial denominations based on the given amount."""
+    # def _calculate_initial_denominations(self, amount):
+    #     """Calculate the initial denominations based on the given amount."""
 
-        remaining_amount = amount
+    #     remaining_amount = amount
 
-        denom_5000 = min(int(remaining_amount / 5000), 10)  # Max 10 notes of 5000
-        remaining_amount -= denom_5000 * 5000
+    #     denom_5000 = min(int(remaining_amount / 5000), 10)  # Max 10 notes of 5000
+    #     remaining_amount -= denom_5000 * 5000
 
-        denom_1000 = min(int(remaining_amount / 1000), 20)  # Max 20 notes of 1000
-        remaining_amount -= denom_1000 * 1000
+    #     denom_1000 = min(int(remaining_amount / 1000), 20)  # Max 20 notes of 1000
+    #     remaining_amount -= denom_1000 * 1000
 
-        denom_500 = min(int(remaining_amount / 500), 20)
-        remaining_amount -= denom_500 * 500
+    #     denom_500 = min(int(remaining_amount / 500), 20)
+    #     remaining_amount -= denom_500 * 500
 
-        denom_100 = min(int(remaining_amount / 100), 50)
-        remaining_amount -= denom_100 * 100
+    #     denom_100 = min(int(remaining_amount / 100), 50)
+    #     remaining_amount -= denom_100 * 100
 
-        denom_50 = min(int(remaining_amount / 50), 20)
-        remaining_amount -= denom_50 * 50
+    #     denom_50 = min(int(remaining_amount / 50), 20)
+    #     remaining_amount -= denom_50 * 50
 
-        denom_20 = min(int(remaining_amount / 20), 50)
-        remaining_amount -= denom_20 * 20
+    #     denom_20 = min(int(remaining_amount / 20), 50)
+    #     remaining_amount -= denom_20 * 20
 
-        denom_10 = min(int(remaining_amount / 10), 100)
-        remaining_amount -= denom_10 * 10
+    #     denom_10 = min(int(remaining_amount / 10), 100)
+    #     remaining_amount -= denom_10 * 10
 
-        denom_5 = min(int(remaining_amount / 5), 100)
-        remaining_amount -= denom_5 * 5
+    #     denom_5 = min(int(remaining_amount / 5), 100)
+    #     remaining_amount -= denom_5 * 5
 
-        denom_2 = min(int(remaining_amount / 2), 100)
-        remaining_amount -= denom_2 * 2
+    #     denom_2 = min(int(remaining_amount / 2), 100)
+    #     remaining_amount -= denom_2 * 2
 
-        denom_1 = int(remaining_amount)
+    #     denom_1 = int(remaining_amount)
 
-        return {
-            "denom_5000_qty": denom_5000,
-            "denom_1000_qty": denom_1000,
-            "denom_500_qty": denom_500,
-            "denom_100_qty": denom_100,
-            "denom_50_qty": denom_50,
-            "denom_20_qty": denom_20,
-            "denom_10_qty": denom_10,
-            "denom_5_qty": denom_5,
-            "denom_2_qty": denom_2,
-            "denom_1_qty": denom_1,
-        }
+    #     return {
+    #         "denom_5000_qty": denom_5000,
+    #         "denom_1000_qty": denom_1000,
+    #         "denom_500_qty": denom_500,
+    #         "denom_100_qty": denom_100,
+    #         "denom_50_qty": denom_50,
+    #         "denom_20_qty": denom_20,
+    #         "denom_10_qty": denom_10,
+    #         "denom_5_qty": denom_5,
+    #         "denom_2_qty": denom_2,
+    #         "denom_1_qty": denom_1,
+    #     }
 
     def action_approve(self):
         """Approve the float request."""
@@ -239,8 +240,51 @@ class FloatRequest(models.Model):
                 body=_("Float request approved by %s") % self.env.user.name,
                 message_type="notification",
             )
-        # Create initial denomination record after approval
-        record.create_initial_denomination_record()
+            
+            existing_denomination = self.env['float.denomination'].search([
+                ('float_request_id', '=', record.id),
+            ])
+            
+            if not existing_denomination:
+                 return {
+                'type': 'ir.actions.act_window',
+                'name': 'Setup Initial Denominations',
+                'res_model': 'initial.denomination.wizard',
+                'view_mode': 'form',
+                'target': 'new',
+                'context': {
+                    'default_float_request_id': record.id,
+                },
+            }
+            else:
+                # Denomination already exists, just compute current
+                record._compute_current_denomination()
+                
+    def action_setup_denominations(self):
+        self.ensure_one()
+        
+        if self.state != 'approved':
+            raise UserError(_("Denominations can only be set up for approved float requests."))
+        
+        existing_denomination = self.env['float.denomination'].search([
+            ('float_request_id', '=', self.id)
+        ])
+        
+        if existing_denomination:
+            raise UserError(_("Denominations have already been set up for this float request."))
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Setup Initial Denominations',
+            'res_model': 'initial.denomination.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_float_request_id': self.id,
+            },
+        }
+        
+        
 
     def action_view_denominations(self):
         """Open the denomination records for this float"""
@@ -302,6 +346,8 @@ class FloatRequest(models.Model):
         for record in self:
             if record.initial_amount <= 0:
                 raise ValidationError(_("Initial amount must be greater than zero."))
+            if not record.initial_amount:
+                raise ValidationError(_("Initial amount is required."))
             if record.can_exceed and record.exceed_limit <= 0:
                 raise ValidationError(
                     _("Exceed limit must be greater than zero when exceed is allowed.")
@@ -381,3 +427,44 @@ class FloatRequest(models.Model):
                 "default_float_request_id": self.id,
             },
         }
+        
+    @api.constrains('name', 'department_id')
+    def _check_name(self):
+        for record in self:
+            if not record.name or not record.name.strip():
+                raise ValidationError(_('Float name is required and cannot be empty.'))
+            
+            if len(record.name.strip()) < 3:
+                raise ValidationError(_('Float name must be at least 3 characters long.'))
+            
+            if len(record.name) > 100:
+                raise ValidationError(_('Float name cannot exceed 100 characters.'))
+            
+            
+            if record.department_id:
+                
+                domain = [
+                    ('name', '=', record.name),
+                    ('department_id', '=', record.department_id.id),
+                    ('state', '!=', 'cancelled')
+                ]
+                
+                
+                if hasattr(record, 'id') and record.id:
+                    domain.append(('id', '!=', record.id))
+                
+                duplicate = self.env['float.request'].search(domain, limit=1)
+                if duplicate:
+                    raise ValidationError(
+                        _('A float with the name "%s" already exists for the %s department.') 
+                        % (record.name, record.department_id.name)
+                    )
+                    
+    @api.constrains('float_manager_id')
+    def _check_float_manager(self):
+        """Validate float manager"""
+        for record in self:
+            if not record.float_manager_id:
+                raise ValidationError(_('Float manager is required.'))
+                    
+            

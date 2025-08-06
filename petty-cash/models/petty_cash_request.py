@@ -330,6 +330,8 @@ class PettyCashRequest(models.Model):
                 errors.append(_("Select the Approved Float Manager."))
             if not record.float_request_id:
                 errors.append(_("Please select a float for this petty cash request."))
+            if record.request_amount > 5000:
+                errors.append(_("Request amount cannot exceed 5000."))
             if errors:
                 raise ValidationError("Please fix the following:\n" + "\n".join(errors))
 

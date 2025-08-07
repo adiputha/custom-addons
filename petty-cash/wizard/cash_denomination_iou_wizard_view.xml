@@ -353,7 +353,7 @@
                                     </div>
                                 </div>
 
-                                <div class="row g-1">
+                                <div class="row g-2">
                                     <!-- Left Column -->
                                     <div class="col-md-6">
                                         <!-- Rs. 5000 -->
@@ -364,17 +364,17 @@
                                             <div
                                                 class="d-flex align-items-center justify-content-between">
                                                 <div class="available-info">
-                                                    <field name="denom_5000_available" nolabel="1"
+                                                    <field name="balance_5000_available" nolabel="1"
                                                         readonly="1"
                                                         class="badge bg-light text-dark"
                                                         style="font-size: 0.7em;" />
                                                     <span class="text-muted"
-                                                        style="font-size: 0.65em;"> available</span>
+                                                        style="font-size: 0.75em;"> available</span>
                                                 </div>
                                                 <div class="denomination-input">
                                                     <field name="balance_5000_qty" nolabel="1"
                                                         class="form-control text-center fw-bold"
-                                                        style="width: 50px; height: 28px; border-radius: 4px; border: 1px solid #dee2e6; font-size: 0.8em;" />
+                                                        style="width: 60px; height: 32px; border-radius: 6px; border: 1px solid #dee2e6; font-size: 0.9em;" />
                                                 </div>
                                             </div>
                                         </div>
@@ -387,17 +387,17 @@
                                             <div
                                                 class="d-flex align-items-center justify-content-between">
                                                 <div class="available-info">
-                                                    <field name="denom_1000_available" nolabel="1"
+                                                    <field name="balance_1000_available" nolabel="1"
                                                         readonly="1"
                                                         class="badge bg-light text-dark"
                                                         style="font-size: 0.7em;" />
                                                     <span class="text-muted"
-                                                        style="font-size: 0.65em;"> available</span>
+                                                        style="font-size: 0.75em;"> available</span>
                                                 </div>
                                                 <div class="denomination-input">
                                                     <field name="balance_1000_qty" nolabel="1"
                                                         class="form-control text-center fw-bold"
-                                                        style="width: 50px; height: 28px; border-radius: 4px; border: 1px solid #dee2e6; font-size: 0.8em;" />
+                                                        style="width: 60px; height: 32px; border-radius: 6px; border: 1px solid #dee2e6; font-size: 0.9em;" />
                                                 </div>
                                             </div>
                                         </div>
@@ -410,17 +410,17 @@
                                             <div
                                                 class="d-flex align-items-center justify-content-between">
                                                 <div class="available-info">
-                                                    <field name="denom_500_available" nolabel="1"
+                                                    <field name="balance_500_available" nolabel="1"
                                                         readonly="1"
                                                         class="badge bg-light text-dark"
                                                         style="font-size: 0.7em;" />
                                                     <span class="text-muted"
-                                                        style="font-size: 0.65em;"> available</span>
+                                                        style="font-size: 0.75em;"> available</span>
                                                 </div>
                                                 <div class="denomination-input">
                                                     <field name="balance_500_qty" nolabel="1"
                                                         class="form-control text-center fw-bold"
-                                                        style="width: 50px; height: 28px; border-radius: 4px; border: 1px solid #dee2e6; font-size: 0.8em;" />
+                                                        style="width: 60px; height: 32px; border-radius: 6px; border: 1px solid #dee2e6; font-size: 0.9em;" />
                                                 </div>
                                             </div>
                                         </div>
@@ -433,17 +433,17 @@
                                             <div
                                                 class="d-flex align-items-center justify-content-between">
                                                 <div class="available-info">
-                                                    <field name="denom_100_available" nolabel="1"
+                                                    <field name="balance_100_available" nolabel="1"
                                                         readonly="1"
                                                         class="badge bg-light text-dark"
                                                         style="font-size: 0.7em;" />
                                                     <span class="text-muted"
-                                                        style="font-size: 0.65em;"> available</span>
+                                                        style="font-size: 0.75em;"> available</span>
                                                 </div>
                                                 <div class="denomination-input">
                                                     <field name="balance_100_qty" nolabel="1"
                                                         class="form-control text-center fw-bold"
-                                                        style="width: 50px; height: 28px; border-radius: 4px; border: 1px solid #dee2e6; font-size: 0.8em;" />
+                                                        style="width: 60px; height: 32px; border-radius: 6px; border: 1px solid #dee2e6; font-size: 0.9em;" />
                                                 </div>
                                             </div>
                                         </div>
@@ -456,17 +456,17 @@
                                             <div
                                                 class="d-flex align-items-center justify-content-between">
                                                 <div class="available-info">
-                                                    <field name="denom_50_available" nolabel="1"
+                                                    <field name="balance_50_available" nolabel="1"
                                                         readonly="1"
                                                         class="badge bg-light text-dark"
                                                         style="font-size: 0.7em;" />
                                                     <span class="text-muted"
-                                                        style="font-size: 0.65em;"> available</span>
+                                                        style="font-size: 0.75em;"> available</span>
                                                 </div>
                                                 <div class="denomination-input">
                                                     <field name="balance_50_qty" nolabel="1"
                                                         class="form-control text-center fw-bold"
-                                                        style="width: 50px; height: 28px; border-radius: 4px; border: 1px solid #dee2e6; font-size: 0.8em;" />
+                                                        style="width: 60px; height: 32px; border-radius: 6px; border: 1px solid #dee2e6; font-size: 0.9em;" />
                                                 </div>
                                             </div>
                                         </div>
@@ -482,17 +482,17 @@
                                             <div
                                                 class="d-flex align-items-center justify-content-between">
                                                 <div class="available-info">
-                                                    <field name="denom_20_available" nolabel="1"
+                                                    <field name="balance_20_available" nolabel="1"
                                                         readonly="1"
                                                         class="badge bg-light text-dark"
                                                         style="font-size: 0.7em;" />
                                                     <span class="text-muted"
-                                                        style="font-size: 0.65em;"> available</span>
+                                                        style="font-size: 0.75em;"> available</span>
                                                 </div>
                                                 <div class="denomination-input">
                                                     <field name="balance_20_qty" nolabel="1"
                                                         class="form-control text-center fw-bold"
-                                                        style="width: 50px; height: 28px; border-radius: 4px; border: 1px solid #dee2e6; font-size: 0.8em;" />
+                                                        style="width: 60px; height: 32px; border-radius: 6px; border: 1px solid #dee2e6; font-size: 0.9em;" />
                                                 </div>
                                             </div>
                                         </div>
@@ -505,17 +505,17 @@
                                             <div
                                                 class="d-flex align-items-center justify-content-between">
                                                 <div class="available-info">
-                                                    <field name="denom_10_available" nolabel="1"
+                                                    <field name="balance_10_available" nolabel="1"
                                                         readonly="1"
                                                         class="badge bg-light text-dark"
                                                         style="font-size: 0.7em;" />
                                                     <span class="text-muted"
-                                                        style="font-size: 0.65em;"> available</span>
+                                                        style="font-size: 0.75em;"> available</span>
                                                 </div>
                                                 <div class="denomination-input">
                                                     <field name="balance_10_qty" nolabel="1"
                                                         class="form-control text-center fw-bold"
-                                                        style="width: 50px; height: 28px; border-radius: 4px; border: 1px solid #dee2e6; font-size: 0.8em;" />
+                                                        style="width: 60px; height: 32px; border-radius: 6px; border: 1px solid #dee2e6; font-size: 0.9em;" />
                                                 </div>
                                             </div>
                                         </div>
@@ -528,17 +528,17 @@
                                             <div
                                                 class="d-flex align-items-center justify-content-between">
                                                 <div class="available-info">
-                                                    <field name="denom_5_available" nolabel="1"
+                                                    <field name="balance_5_available" nolabel="1"
                                                         readonly="1"
                                                         class="badge bg-light text-dark"
                                                         style="font-size: 0.7em;" />
                                                     <span class="text-muted"
-                                                        style="font-size: 0.65em;"> available</span>
+                                                        style="font-size: 0.75em;"> available</span>
                                                 </div>
                                                 <div class="denomination-input">
                                                     <field name="balance_5_qty" nolabel="1"
                                                         class="form-control text-center fw-bold"
-                                                        style="width: 50px; height: 28px; border-radius: 4px; border: 1px solid #dee2e6; font-size: 0.8em;" />
+                                                        style="width: 60px; height: 32px; border-radius: 6px; border: 1px solid #dee2e6; font-size: 0.9em;" />
                                                 </div>
                                             </div>
                                         </div>
@@ -551,17 +551,17 @@
                                             <div
                                                 class="d-flex align-items-center justify-content-between">
                                                 <div class="available-info">
-                                                    <field name="denom_2_available" nolabel="1"
+                                                    <field name="balance_2_available" nolabel="1"
                                                         readonly="1"
                                                         class="badge bg-light text-dark"
                                                         style="font-size: 0.7em;" />
                                                     <span class="text-muted"
-                                                        style="font-size: 0.65em;"> available</span>
+                                                        style="font-size: 0.75em;"> available</span>
                                                 </div>
                                                 <div class="denomination-input">
                                                     <field name="balance_2_qty" nolabel="1"
                                                         class="form-control text-center fw-bold"
-                                                        style="width: 50px; height: 28px; border-radius: 4px; border: 1px solid #dee2e6; font-size: 0.8em;" />
+                                                        style="width: 60px; height: 32px; border-radius: 6px; border: 1px solid #dee2e6; font-size: 0.9em;" />
                                                 </div>
                                             </div>
                                         </div>
@@ -574,17 +574,17 @@
                                             <div
                                                 class="d-flex align-items-center justify-content-between">
                                                 <div class="available-info">
-                                                    <field name="denom_1_available" nolabel="1"
+                                                    <field name="balance_1_available" nolabel="1"
                                                         readonly="1"
                                                         class="badge bg-light text-dark"
                                                         style="font-size: 0.7em;" />
                                                     <span class="text-muted"
-                                                        style="font-size: 0.65em;"> available</span>
+                                                        style="font-size: 0.75em;"> available</span>
                                                 </div>
                                                 <div class="denomination-input">
                                                     <field name="balance_1_qty" nolabel="1"
                                                         class="form-control text-center fw-bold"
-                                                        style="width: 50px; height: 28px; border-radius: 4px; border: 1px solid #dee2e6; font-size: 0.8em;" />
+                                                        style="width: 60px; height: 32px; border-radius: 6px; border: 1px solid #dee2e6; font-size: 0.9em;" />
                                                 </div>
                                             </div>
                                         </div>

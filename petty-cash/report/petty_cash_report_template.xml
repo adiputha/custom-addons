@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="report_petty_cash_requests">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="docs" t-as="doc">
+                    <div class="page">
+                        <h2>Petty Cash Request</h2>
+                        <!-- <p><strong>Requestor:</strong> <span t-field="doc.requestor_id.name"/></p>
+                        <p><strong>Amount:</strong> <span t-field="doc.request_amount"/></p>
+                        <p><strong>Justification:</strong> <span t-field="doc.justification"/></p> -->
+                    </div>
+                </t>
+
+            </t>
+        </t>
+    </template>
+</odoo>

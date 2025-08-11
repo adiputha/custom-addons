@@ -47,6 +47,7 @@
         <menuitem id="menu_reimbursement"
             name="Reimbursement"
             parent="petty_cash_menu_root"
+            action="action_cash_reimbursement"
             sequence="40" />
 
         <!-- Reports Submenu -->

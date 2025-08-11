@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="cash_reimbursement_form_view" model="ir.ui.view">
+        <field name="name">cash.reimbursement.form</field>
+        <field name="model">cash.reimbursement</field>
+        <field name="arch" type="xml">
+            <form string="Cash Reimbursement Request">
+                <header>
+                    <button name="action_submit" string="Submit for Approval"
+                        type="object" class="btn-primary"
+                        invisible="state != 'draft'" />
+                    <button name="action_approve" string="Approve"
+                        type="object" class="btn-success"
+                        invisible="state != 'pending'"
+                        groups="account.group_account_manager" />
+                    <button name="action_reject" string="Reject"
+                        type="object" class="btn-danger"
+                        invisible="state != 'pending'"
+                        groups="account.group_account_manager" />
+                    <button name="action_update_denomination" string="Issue Cash"
+                        type="object" class="btn-primary"
+                        invisible="state != 'approved'" />
+                    <button name="action_complete_request" string="Complete"
+                        type="object" class="btn-success"
+                        invisible="state != 'approved' or not cash_received_by_handler or not received_amount" />
+                    <button name="action_reset_to_draft" string="Reset to Draft"
+                        type="object" class="btn-secondary"
+                        invisible="state != 'pending'" />
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,pending,approved,completed" />
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1" />
+                        </h1>
+                    </div>
+
+                    <!-- Alert for different states -->
+                    <div class="alert alert-info" invisible="state != 'draft'">
+                        <div class="d-flex align-items-center">
+                            <i class="fa fa-info-circle me-2"></i>
+                            <div>
+                                <strong>Draft Reimbursement Request</strong>
+                                <p class="mb-0">Fill in all required fields and submit for approval
+                                    when ready.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning" invisible="state != 'pending'">
+                        <div class="d-flex align-items-center">
+                            <i class="fa fa-clock-o me-2"></i>
+                            <div>
+                                <strong>Pending Approval</strong>
+                                <p class="mb-0">This reimbursement request is waiting for manager
+                                    approval.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success" invisible="state != 'approved'">
+                        <div class="d-flex align-items-center">
+                            <i class="fa fa-check-circle me-2"></i>
+                            <div>
+                                <strong>Approved</strong>
+                                <p class="mb-0">Click "Issue Cash" to process the reimbursement.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="float_request_id"
+                                domain="[('state', '=', 'approved')]"
+                                options="{'no_create': True, 'no_edit': True}" />
+                            <field name="handler_name" />
+                            <field name="request_date" />
+                            <field name="current_balance" widget="monetary" />
+                        </group>
+                        <group>
+                            <field name="required_amount" widget="monetary" />
+                            <field name="received_amount" widget="monetary"
+                                invisible="state not in ['approved', 'completed']" />
+                            <field name="is_manager_approved"
+                                invisible="state not in ['approved', 'completed']" />
+                            <field name="approved_by"
+                                invisible="state not in ['approved', 'completed']" />
+                        </group>
+                    </group>
+
+                    <group string="Justification &amp; Details">
+                        <field name="justification"
+                            placeholder="Provide detailed justification for the reimbursement request..." />
+                    </group>
+
+                    <group string="Supporting Documents">
+                        <field name="attachment" filename="attachment_filename" />
+                        <field name="attachment_filename" invisible="1" />
+                    </group>
+
+                    <!-- Cash Receipt Section -->
+                    <group string="Cash Receipt Confirmation"
+                        invisible="state not in ['approved', 'completed']">
+                        <group>
+                            <field name="cash_received_by_handler" />
+                            <field name="received_voucher" filename="received_voucher_filename"
+                                invisible="not cash_received_by_handler" />
+                            <field name="received_voucher_filename" invisible="1" />
+                        </group>
+                        <group>
+                            <field name="remarks" placeholder="Any additional remarks..." />
+                        </group>
+                    </group>
+
+                    <!-- Report Date Range -->
+                    <group string="Expense Report Period"
+                        invisible="state not in ['approved', 'completed']">
+                        <group>
+                            <field name="report_from_date" />
+                            <field name="report_to_date" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Cash Reimbursement Tree View -->
+    <record id="cash_reimbursement_tree_view" model="ir.ui.view">
+        <field name="name">cash.reimbursement.list</field>
+        <field name="model">cash.reimbursement</field>
+        <field name="arch" type="xml">
+            <list string="Cash Reimbursement Requests"
+                decoration-success="state == 'completed'"
+                decoration-info="state == 'approved'"
+                decoration-warning="state == 'pending'"
+                decoration-muted="state == 'draft'"
+                decoration-danger="state == 'rejected'">
+                <field name="request_date" />
+                <field name="name" />
+                <field name="float_request_id" />
+                <field name="handler_name" />
+                <field name="required_amount" widget="monetary" sum="Total Required" />
+                <field name="received_amount" widget="monetary" sum="Total Received" />
+                <field name="current_balance" widget="monetary" />
+                <field name="approved_by" />
+                <field name="state" widget="badge" />
+            </list>
+        </field>
+    </record>
+
+    <!-- Cash Reimbursement Search View -->
+    <record id="cash_reimbursement_search_view" model="ir.ui.view">
+        <field name="name">cash.reimbursement.search</field>
+        <field name="model">cash.reimbursement</field>
+        <field name="arch" type="xml">
+            <search string="Search Reimbursement Requests">
+                <field name="name" />
+                <field name="float_request_id" />
+                <field name="handler_name" />
+                <field name="approved_by" />
+
+                <!-- Status Filters -->
+                <filter string="Draft" name="draft"
+                    domain="[('state', '=', 'draft')]" />
+                <filter string="Pending Approval" name="pending"
+                    domain="[('state', '=', 'pending')]" />
+                <filter string="Approved" name="approved"
+                    domain="[('state', '=', 'approved')]" />
+                <filter string="Completed" name="completed"
+                    domain="[('state', '=', 'completed')]" />
+                <filter string="Rejected" name="rejected"
+                    domain="[('state', '=', 'rejected')]" />
+
+                <separator />
+                <!-- My Filters -->
+                <filter string="My Requests" name="my_requests"
+                    domain="[('handler_name', '=', uid)]" />
+                <filter string="My Approvals" name="my_approvals"
+                    domain="[('approved_by', '=', uid)]" />
+                <filter string="Pending My Approval" name="pending_my_approval"
+                    domain="[('state', '=', 'pending')]" />
+
+                <separator />
+                <!-- Date Filters -->
+                <filter string="This Month" name="this_month"
+                    domain="[('request_date', '&gt;=', (context_today() + relativedelta(day=1)).strftime('%Y-%m-%d')),
+                             ('request_date', '&lt;', (context_today() + relativedelta(months=1, day=1)).strftime('%Y-%m-%d'))]" />
+                <filter string="This Year" name="this_year"
+                    domain="[('request_date', '&gt;=', context_today().strftime('%Y-01-01'))]" />
+
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_status"
+                        context="{'group_by': 'state'}" />
+                    <filter string="Float" name="group_float"
+                        context="{'group_by': 'float_request_id'}" />
+                    <filter string="Handler" name="group_handler"
+                        context="{'group_by': 'handler_name'}" />
+                    <filter string="Request Date" name="group_date"
+                        context="{'group_by': 'request_date'}" />
+                    <filter string="Approved By" name="group_approved_by"
+                        context="{'group_by': 'approved_by'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="cash_reimbursement_kanban_view" model="ir.ui.view">
+        <field name="name">cash.reimbursement.kanban</field>
+        <field name="model">cash.reimbursement</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="id" />
+                <field name="name" />
+                <field name="float_request_id" />
+                <field name="handler_name" />
+                <field name="required_amount" />
+                <field name="received_amount" />
+                <field name="request_date" />
+                <field name="state" />
+                <field name="current_balance" />
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_record_top">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="name" />
+                                    </strong>
+                                    <small class="text-muted">
+                                        <field name="float_request_id" />
+                                    </small>
+                                </div>
+                                <div class="o_kanban_record_top_right">
+                                    <div class="badge"
+                                        t-attf-class="badge-{{'success' if record.state.raw_value == 'completed' else 'info' if record.state.raw_value == 'approved' else 'warning' if record.state.raw_value == 'pending' else 'secondary'}}">
+                                        <field name="state" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <small>Handler:</small>
+                                        <br />
+                                        <span>
+                                            <field name="handler_name" />
+                                        </span>
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <small>Amount:</small>
+                                        <br />
+                                        <strong>Rs. <t t-esc="record.required_amount.value" /></strong>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="fa fa-calendar" />
+                                        <t t-esc="record.request_date.value" />
+                                    </small>
+                                </div>
+                                <div class="mt-1" t-if="record.current_balance.value">
+                                    <small>Balance: Rs. <t t-esc="record.current_balance.value" /></small>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Cash Reimbursement Action -->
+    <record id="action_cash_reimbursement" model="ir.actions.act_window">
+        <field name="name">Cash Reimbursement</field>
+        <field name="res_model">cash.reimbursement</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="context">{
+            'search_default_my_requests': 1,
+            'default_state': 'draft',
+            }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first reimbursement request!
+            </p>
+            <p> Reimbursement requests are used to top up floats when cash runs low. <br />Click
+                "Create" to request a reimbursement for your float. </p>
+        </field>
+    </record>
+
+    <!-- Quick Create Reimbursement Action -->
+    <record id="action_create_reimbursement" model="ir.actions.act_window">
+        <field name="name">Request Reimbursement</field>
+        <field name="res_model">cash.reimbursement</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_state': 'draft'}</field>
+    </record>
+
+</odoo>

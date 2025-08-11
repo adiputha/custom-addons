@@ -44,3 +44,8 @@ access_initial_denomination_wizard_user,initial.denomination.wizard.user,model_i
 access_initial_denomination_wizard_manager,initial.denomination.wizard.manager,model_initial_denomination_wizard,base.group_erp_manager,1,1,1,1
 access_initial_denomination_wizard_admin,initial.denomination.wizard.admin,model_initial_denomination_wizard,base.group_system,1,1,1,1
 access_initial_denomination_wizard_accountant,initial.denomination.wizard.accountant,model_initial_denomination_wizard,account.group_account_user,1,1,1,1
+
+access_cash_reimbursement_user,cash.reimbursement.user,model_cash_reimbursement,base.group_user,1,1,1,0
+access_cash_reimbursement_manager,cash.reimbursement.manager,model_cash_reimbursement,base.group_erp_manager,1,1,1,1
+access_cash_reimbursement_admin,cash.reimbursement.admin,model_cash_reimbursement,base.group_system,1,1,1,1
+access_cash_reimbursement_accountant,cash.reimbursement.accountant,model_cash_reimbursement,account.group_account_user,1,1,1,1

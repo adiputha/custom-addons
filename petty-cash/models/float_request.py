@@ -151,6 +151,12 @@ class FloatRequest(models.Model):
         compute="_compute_current_denomination",
         store=True,
     )
+    
+    reimbursement_ids = fields.One2many(
+        "cash.reimbursement",
+        "float_request_id",
+        string="Cash Reimbursements",
+    )
 
     @api.depends("denomination_ids")
     def _compute_current_denomination(self):
@@ -467,4 +473,22 @@ class FloatRequest(models.Model):
             if not record.float_manager_id:
                 raise ValidationError(_('Float manager is required.'))
                     
-            
+    def action_request_reimbursement(self):
+        """Open the reimbursement wizard for this float request."""
+        self.ensure_one()
+        
+        if self.state != 'approved':
+            raise UserError(_("Reimbursement can only be requested for approved float requests."))
+        
+        return {
+            "type": "ir.actions.act_window",
+            "name": f"Request Reimbursement - {self.name}",
+            "res_model": "cash.reimbursement",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_float_request_id": self.id,
+                "default_handler_name": self.env.user.id,
+                "default_state": "draft",
+            },
+        }        

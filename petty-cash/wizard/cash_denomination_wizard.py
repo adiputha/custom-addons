@@ -33,7 +33,11 @@ class CashDenominationWizard(models.TransientModel):
     )
 
     request_type = fields.Selection(
-        [("petty_cash", "Petty Cash"), ("iou", "IOU")],
+        [
+            ("petty_cash", "Petty Cash"),
+            ("iou", "IOU"),
+            ("reimbursement", "Reimbursement"),
+        ],
         string="Request Type",
         readonly=True,
     )
@@ -123,21 +127,87 @@ class CashDenominationWizard(models.TransientModel):
     balance_5_qty = fields.Integer(string="Balance Rs. 5", default=0)
     balance_2_qty = fields.Integer(string="Balance Rs. 2", default=0)
     balance_1_qty = fields.Integer(string="Balance Rs. 1", default=0)
-    
-    balance_5000_available = fields.Integer(string="Balance Rs. 5,000 Available", readonly=True, default=0,compute="_compute_balance_available", store=True)
-    balance_1000_available = fields.Integer(string="Balance Rs. 1,000 Available", readonly=True, default=0, compute="_compute_balance_available", store=True)
-    balance_500_available = fields.Integer(string="Balance Rs. 500 Available", readonly=True, default=0, compute="_compute_balance_available", store=True)
-    balance_100_available = fields.Integer(string="Balance Rs. 100 Available", readonly=True, default=0, compute="_compute_balance_available", store=True)
-    balance_50_available = fields.Integer(string="Balance Rs. 50 Available", readonly=True, default=0, compute="_compute_balance_available", store=True)
-    balance_20_available = fields.Integer(string="Balance Rs. 20 Available", readonly=True, default=0, compute="_compute_balance_available", store=True)
-    balance_10_available = fields.Integer(string="Balance Rs. 10 Available", readonly=True, default=0, compute="_compute_balance_available", store=True)
-    balance_5_available = fields.Integer(string="Balance Rs. 5 Available", readonly=True, default=0, compute="_compute_balance_available", store=True)
-    balance_2_available = fields.Integer(string="Balance Rs. 2 Available", readonly=True, default=0, compute="_compute_balance_available", store=True)
-    balance_1_available = fields.Integer(string="Balance Rs. 1 Available", readonly=True, default=0, compute="_compute_balance_available", store=True)
+
+    balance_5000_available = fields.Integer(
+        string="Balance Rs. 5,000 Available",
+        readonly=True,
+        default=0,
+        compute="_compute_balance_available",
+        store=True,
+    )
+    balance_1000_available = fields.Integer(
+        string="Balance Rs. 1,000 Available",
+        readonly=True,
+        default=0,
+        compute="_compute_balance_available",
+        store=True,
+    )
+    balance_500_available = fields.Integer(
+        string="Balance Rs. 500 Available",
+        readonly=True,
+        default=0,
+        compute="_compute_balance_available",
+        store=True,
+    )
+    balance_100_available = fields.Integer(
+        string="Balance Rs. 100 Available",
+        readonly=True,
+        default=0,
+        compute="_compute_balance_available",
+        store=True,
+    )
+    balance_50_available = fields.Integer(
+        string="Balance Rs. 50 Available",
+        readonly=True,
+        default=0,
+        compute="_compute_balance_available",
+        store=True,
+    )
+    balance_20_available = fields.Integer(
+        string="Balance Rs. 20 Available",
+        readonly=True,
+        default=0,
+        compute="_compute_balance_available",
+        store=True,
+    )
+    balance_10_available = fields.Integer(
+        string="Balance Rs. 10 Available",
+        readonly=True,
+        default=0,
+        compute="_compute_balance_available",
+        store=True,
+    )
+    balance_5_available = fields.Integer(
+        string="Balance Rs. 5 Available",
+        readonly=True,
+        default=0,
+        compute="_compute_balance_available",
+        store=True,
+    )
+    balance_2_available = fields.Integer(
+        string="Balance Rs. 2 Available",
+        readonly=True,
+        default=0,
+        compute="_compute_balance_available",
+        store=True,
+    )
+    balance_1_available = fields.Integer(
+        string="Balance Rs. 1 Available",
+        readonly=True,
+        default=0,
+        compute="_compute_balance_available",
+        store=True,
+    )
 
     selected_balance_amount = fields.Float(
         string="Selected Balance Amount",
         compute="_compute_selected_balance_amount",
+    )
+
+    reimbursement_id = fields.Many2one(
+        "cash.reimbursement",
+        string="Reimbursement Request",
+        readonly=True,
     )
 
     @api.depends("selected_amount", "requested_amount")
@@ -181,33 +251,61 @@ class CashDenominationWizard(models.TransientModel):
             record.balance_amount = record.selected_amount - record.requested_amount
 
     @api.depends(
-        "denom_5000_available", "denom_5000_qty",
-        "denom_1000_available", "denom_1000_qty",
-        "denom_500_available", "denom_500_qty",
-        "denom_100_available", "denom_100_qty",
-        "denom_50_available", "denom_50_qty",
-        "denom_20_available", "denom_20_qty",
-        "denom_10_available", "denom_10_qty",
-        "denom_5_available", "denom_5_qty",
-        "denom_2_available", "denom_2_qty",
-        "denom_1_available", "denom_1_qty",
+        "denom_5000_available",
+        "denom_5000_qty",
+        "denom_1000_available",
+        "denom_1000_qty",
+        "denom_500_available",
+        "denom_500_qty",
+        "denom_100_available",
+        "denom_100_qty",
+        "denom_50_available",
+        "denom_50_qty",
+        "denom_20_available",
+        "denom_20_qty",
+        "denom_10_available",
+        "denom_10_qty",
+        "denom_5_available",
+        "denom_5_qty",
+        "denom_2_available",
+        "denom_2_qty",
+        "denom_1_available",
+        "denom_1_qty",
     )
     def _compute_balance_available(self):
         """Compute available balance denominations after main selection"""
         for record in self:
-            record.balance_5000_available = max(0, record.denom_5000_available - record.denom_5000_qty)
-            record.balance_1000_available = max(0, record.denom_1000_available - record.denom_1000_qty)
-            record.balance_500_available = max(0, record.denom_500_available - record.denom_500_qty)
-            record.balance_100_available = max(0, record.denom_100_available - record.denom_100_qty)
-            record.balance_50_available = max(0, record.denom_50_available - record.denom_50_qty)
-            record.balance_20_available = max(0, record.denom_20_available - record.denom_20_qty)
-            record.balance_10_available = max(0, record.denom_10_available - record.denom_10_qty)
-            record.balance_5_available = max(0, record.denom_5_available - record.denom_5_qty)
-            record.balance_2_available = max(0, record.denom_2_available - record.denom_2_qty)
-            record.balance_1_available = max(0, record.denom_1_available - record.denom_1_qty)
-    
-    
-    
+            record.balance_5000_available = max(
+                0, record.denom_5000_available - record.denom_5000_qty
+            )
+            record.balance_1000_available = max(
+                0, record.denom_1000_available - record.denom_1000_qty
+            )
+            record.balance_500_available = max(
+                0, record.denom_500_available - record.denom_500_qty
+            )
+            record.balance_100_available = max(
+                0, record.denom_100_available - record.denom_100_qty
+            )
+            record.balance_50_available = max(
+                0, record.denom_50_available - record.denom_50_qty
+            )
+            record.balance_20_available = max(
+                0, record.denom_20_available - record.denom_20_qty
+            )
+            record.balance_10_available = max(
+                0, record.denom_10_available - record.denom_10_qty
+            )
+            record.balance_5_available = max(
+                0, record.denom_5_available - record.denom_5_qty
+            )
+            record.balance_2_available = max(
+                0, record.denom_2_available - record.denom_2_qty
+            )
+            record.balance_1_available = max(
+                0, record.denom_1_available - record.denom_1_qty
+            )
+
     @api.depends(
         "balance_5000_qty",
         "balance_1000_qty",
@@ -278,6 +376,27 @@ class CashDenominationWizard(models.TransientModel):
 
                     # Load float and denomination data
                     float_request = iou_request.float_request_id
+                    if float_request:
+                        defaults["cash_in_hand"] = float_request.cash_in_hand
+
+                        # Load available denominations
+                        denom_data = self._get_denomination_data(float_request)
+                        defaults.update(denom_data)
+
+            elif self.env.context.get("default_reimbursement_id"):
+                reimbursement_id = self.env.context.get("default_reimbursement_id")
+                defaults["reimbursement_id"] = reimbursement_id
+
+                reimbursement = self.env["petty.cash.reimbursement"].browse(
+                    reimbursement_id
+                )
+                if reimbursement.exists():
+                    defaults["request_number"] = reimbursement.name
+                    defaults["requested_amount"] = reimbursement.required_amount
+                    defaults["request_type"] = "reimbursement"
+
+                    # Load float and denomination data
+                    float_request = reimbursement.float_request_id
                     if float_request:
                         defaults["cash_in_hand"] = float_request.cash_in_hand
 
@@ -462,8 +581,7 @@ class CashDenominationWizard(models.TransientModel):
                     errors
                 )
                 raise UserError(error_msg)
-    
-    
+
     @api.constrains(
         "balance_5000_qty",
         "balance_1000_qty",
@@ -475,7 +593,7 @@ class CashDenominationWizard(models.TransientModel):
         "balance_5_qty",
         "balance_2_qty",
         "balance_1_qty",
-    )        
+    )
     def _check_balance_denominations(self):
         for record in self:
             if not record.is_cash_balanced:
@@ -493,17 +611,17 @@ class CashDenominationWizard(models.TransientModel):
                 (record.balance_2_qty, record.denom_2_available, "Rs. 2"),
                 (record.balance_1_qty, record.denom_1_available, "Rs. 1"),
             ]
-            
+
             for needed, available, denomination in checks:
                 if needed > available:
                     errors.append(
                         f"{denomination}: Need {needed}, Available {available}"
                     )
-                    
+
             if errors:
-                error_msg = _("Not enough balance denominations available:\n") + "\n".join(
-                    errors
-                )
+                error_msg = _(
+                    "Not enough balance denominations available:\n"
+                ) + "\n".join(errors)
                 raise UserError(error_msg)
 
     def action_auto_calculate(self):
@@ -594,6 +712,8 @@ class CashDenominationWizard(models.TransientModel):
             float_request = self.request_id.float_request_id
         elif self.iou_request_id:
             float_request = self.iou_request_id.float_request_id
+        elif self.reimbursement_id:
+            float_request = self.reimbursement_id.float_request_id
 
         if not float_request:
             raise UserError(_("No float request found."))
@@ -619,7 +739,10 @@ class CashDenominationWizard(models.TransientModel):
                 "denom_1_qty": self.denom_1_qty,
             }
 
-            current_denom.update_denomination_after_reimbursement(denomination_used)
+            if self.reimbursement_id:
+                current_denom.add_denomination_from_reimbursement(denomination_used)
+            else:
+                current_denom.update_denomination_after_reimbursement(denomination_used)
 
         # Create message and update request state
         denomination_details = self._create_denomination_message()
@@ -631,6 +754,10 @@ class CashDenominationWizard(models.TransientModel):
             self.iou_request_id.state = "pending_bill_submission"
             self.iou_request_id.cashReceivedByEmployee = True
             self.iou_request_id.message_post(body=denomination_details)
+        elif self.reimbursement_id:
+            self.reimbursement_id.received_amount = self.selected_amount
+            self.reimbursement_id.cash_received_by_handler = True
+            self.reimbursement_id.message_post(body=denomination_details)
 
         return {
             "type": "ir.actions.act_window_close",
@@ -686,5 +813,3 @@ class CashDenominationWizard(models.TransientModel):
         return {
             "type": "ir.actions.act_window_close",
         }
-        
-    

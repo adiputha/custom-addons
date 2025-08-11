@@ -16,13 +16,15 @@
         
         # data
         "data/sequence_data.xml",
-        
+
         # wizard
         "wizard/cash_denomination_wizard_view.xml",
         "wizard/cash_denomination_iou_wizard_view.xml",
         "wizard/initial_denomination_wizard_views.xml",
         
         # views
+        "views/cash_reimbursement_views.xml",
+        
         "views/float_customization_views.xml",
         "views/float_request_views.xml",
         "views/float_denomination_views.xml",
@@ -36,6 +38,10 @@
         
         
         "views/petty_cash_menu.xml",
+        
+        #reports
+        "report/petty_cash_report_template.xml",
+        "report/petty_cash_report.xml"
     ],
     "assets": {
         "web.assets_backend": [

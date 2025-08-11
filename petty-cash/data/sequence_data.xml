@@ -24,5 +24,18 @@
             <field name="use_date_range">True</field>
             <field name="implementation">standard</field>
         </record>
+
+
+        <!-- Sequence for Cash Reimbursement Requests -->
+        <record id="seq_cash_reimbursement" model="ir.sequence">
+            <field name="name">Cash Reimbursement</field>
+            <field name="code">cash.reimbursement</field>
+            <field name="prefix">RB-%(y)s-</field>
+            <field name="padding">3</field>
+            <field name="number_increment">1</field>
+            <field name="number_next">1</field>
+            <field name="use_date_range">True</field>
+            <field name="implementation">standard</field>
+        </record>
     </data>
 </odoo>

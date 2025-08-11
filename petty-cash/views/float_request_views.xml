@@ -57,7 +57,8 @@
                                     }">
                                         IOU Request
                                     </button>
-                                    <button class="btn btn-primary">Reimbursement</button>
+                                    <button class="btn btn-primary" type='object'
+                                        name='action_request_reimbursement'>Reimbursement</button>
                                     <button class="btn btn-primary" type="object"
                                         name="action_view_denominations">Denomination
                                         Count</button>

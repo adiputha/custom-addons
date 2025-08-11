@@ -1,18 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <template id="report_petty_cash_requests">
+    <!-- Working report template -->
+    <template id="petty_cash_report_template">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
-                <t t-foreach="docs" t-as="doc">
-                    <div class="page">
-                        <h2>Petty Cash Request</h2>
-                        <!-- <p><strong>Requestor:</strong> <span t-field="doc.requestor_id.name"/></p>
-                        <p><strong>Amount:</strong> <span t-field="doc.request_amount"/></p>
-                        <p><strong>Justification:</strong> <span t-field="doc.justification"/></p> -->
-                    </div>
-                </t>
+                <div class="page">
+                    <h2>Petty Cash Requests Report</h2>
+                    <p>Generated: <span
+                            t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')" /></p>
+                    <p>Total Records: <span t-esc="len(docs)" /></p>
 
+                    <table class="table table-bordered"
+                        style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #f8f9fa;">
+                                <th style="border: 1px solid #dee2e6; padding: 8px;">Request No.</th>
+                                <th style="border: 1px solid #dee2e6; padding: 8px;">Date</th>
+                                <th style="border: 1px solid #dee2e6; padding: 8px;">Requestor</th>
+                                <th style="border: 1px solid #dee2e6; padding: 8px;">Amount</th>
+                                <th style="border: 1px solid #dee2e6; padding: 8px;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="docs" t-as="doc">
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 8px;">
+                                        <span t-field="doc.name" />
+                                    </td>
+                                    <td style="border: 1px solid #dee2e6; padding: 8px;">
+                                        <span t-field="doc.request_date"
+                                            t-options="{'widget': 'date'}" />
+                                    </td>
+                                    <td style="border: 1px solid #dee2e6; padding: 8px;">
+                                        <span t-field="doc.request_by.name" />
+                                    </td>
+                                    <td
+                                        style="border: 1px solid #dee2e6; padding: 8px; text-align: right;">
+                                        Rs. <span t-esc="'{:,.2f}'.format(doc.request_amount)" /></td>
+                                    <td style="border: 1px solid #dee2e6; padding: 8px;">
+                                        <span t-field="doc.state" />
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                        <tfoot>
+                            <tr style="background-color: #e9ecef;">
+                                <td colspan="3"
+                                    style="border: 1px solid #dee2e6; padding: 8px; text-align: right;">
+                                    <strong>Total:</strong>
+                                </td>
+                                <td
+                                    style="border: 1px solid #dee2e6; padding: 8px; text-align: right;">
+                                    <strong>Rs. <span
+                                            t-esc="'{:,.2f}'.format(sum(doc.request_amount for doc in docs))" /></strong>
+                                </td>
+                                <td style="border: 1px solid #dee2e6; padding: 8px;"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </t>
         </t>
     </template>
+
+    <!-- Working report action -->
+    <record id="petty_cash_report_action" model="ir.actions.report">
+        <field name="name">Petty Cash Report</field>
+        <field name="model">petty.cash.request</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">petty-cash.petty_cash_report_template</field>
+        <field name="report_file">petty-cash.petty_cash_report_template</field>
+        <field name="binding_model_id" ref="model_petty_cash_request" />
+        <field name="binding_type">report</field>
+        <field name="print_report_name">'Petty Cash Report'</field>
+    </record>
 </odoo>

@@ -54,6 +54,7 @@
         <menuitem id="menu_petty_cash_reports"
             name="Reports"
             parent="petty_cash_menu_root"
+            action="petty_cash_report_action"
             sequence="50" />
 
         <!-- Petty Cash Reports -->

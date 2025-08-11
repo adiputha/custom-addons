@@ -26,6 +26,10 @@
                     <button name="action_reset_to_draft" string="Reset to Draft"
                         type="object" class="btn-secondary"
                         invisible="state != 'pending'" />
+                    <button name="action_view_reimbursement_report" string="Generate Report"
+                        type="object" class="btn-info"
+                        invisible="state != 'completed' or not report_from_date or not report_to_date"
+                        help="Generate expense report for the specified period" />
                     <field name="state" widget="statusbar"
                         statusbar_visible="draft,pending,approved,completed" />
                 </header>
@@ -206,76 +210,11 @@
         </field>
     </record>
 
-    <record id="cash_reimbursement_kanban_view" model="ir.ui.view">
-        <field name="name">cash.reimbursement.kanban</field>
-        <field name="model">cash.reimbursement</field>
-        <field name="arch" type="xml">
-            <kanban default_group_by="state" class="o_kanban_small_column">
-                <field name="id" />
-                <field name="name" />
-                <field name="float_request_id" />
-                <field name="handler_name" />
-                <field name="required_amount" />
-                <field name="received_amount" />
-                <field name="request_date" />
-                <field name="state" />
-                <field name="current_balance" />
-                <templates>
-                    <t t-name="kanban-box">
-                        <div class="oe_kanban_card oe_kanban_global_click">
-                            <div class="o_kanban_record_top">
-                                <div class="o_kanban_record_headings">
-                                    <strong class="o_kanban_record_title">
-                                        <field name="name" />
-                                    </strong>
-                                    <small class="text-muted">
-                                        <field name="float_request_id" />
-                                    </small>
-                                </div>
-                                <div class="o_kanban_record_top_right">
-                                    <div class="badge"
-                                        t-attf-class="badge-{{'success' if record.state.raw_value == 'completed' else 'info' if record.state.raw_value == 'approved' else 'warning' if record.state.raw_value == 'pending' else 'secondary'}}">
-                                        <field name="state" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="o_kanban_record_body">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <small>Handler:</small>
-                                        <br />
-                                        <span>
-                                            <field name="handler_name" />
-                                        </span>
-                                    </div>
-                                    <div class="col-6 text-end">
-                                        <small>Amount:</small>
-                                        <br />
-                                        <strong>Rs. <t t-esc="record.required_amount.value" /></strong>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    <small class="text-muted">
-                                        <i class="fa fa-calendar" />
-                                        <t t-esc="record.request_date.value" />
-                                    </small>
-                                </div>
-                                <div class="mt-1" t-if="record.current_balance.value">
-                                    <small>Balance: Rs. <t t-esc="record.current_balance.value" /></small>
-                                </div>
-                            </div>
-                        </div>
-                    </t>
-                </templates>
-            </kanban>
-        </field>
-    </record>
-
     <!-- Cash Reimbursement Action -->
     <record id="action_cash_reimbursement" model="ir.actions.act_window">
         <field name="name">Cash Reimbursement</field>
         <field name="res_model">cash.reimbursement</field>
-        <field name="view_mode">kanban,list,form</field>
+        <field name="view_mode">list,form</field>
         <field name="context">{
             'search_default_my_requests': 1,
             'default_state': 'draft',

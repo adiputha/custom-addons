@@ -15,6 +15,7 @@ class CashReimbursement(models.Model):
         required=True,
         copy=False,
         readonly=True,
+        default="New Reimbursement Request",
         tracking=True,
     )
 
@@ -145,8 +146,7 @@ class CashReimbursement(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             if (
-                vals.get("name", "New Reimbursement Request")
-                == "New Reimbursement Request"
+                vals.get("name", "New Reimbursement Request") == "New Reimbursement Request"
             ):
                 vals["name"] = self._generate_sequence_number()
         return super().create(vals_list)
@@ -157,13 +157,13 @@ class CashReimbursement(models.Model):
         if not sequence:
             year = fields.Date.today().strftime("%Y")
             last_reimb = self.search([], order="id desc", limit=1)
-            if last_reimb and last_reimb.name.startswith("RB-"):
+            if last_reimb and last_reimb.name.startswith("CR-"):
                 try:
                     last_num = int(last_reimb.name.split("-")[2])
-                    return f"RB-{year}-{str(last_num + 1).zfill(3)}"
+                    return f"CR-{year}-{str(last_num + 1).zfill(3)}"
                 except:
                     pass
-            return f"RB-{year}-001"
+            return f"CR-{year}-001"
         return sequence
 
     @api.constrains("required_amount", "received_amount")
@@ -329,6 +329,18 @@ class CashReimbursement(models.Model):
                 name += f" (Req: {record.required_amount:,.2f})"
             result.append((record.id, name))
         return result
+    
+    
+    def get_period_expenses(self):
+        if not self.report_from_date or not self.report_to_date:
+            return self.env['petty.cash.request']
+        
+        return self.env['petty.cash.request'].search([
+            ('float_request_id', '=', self.float_request_id.id),
+            ('request_date', '>=', self.report_from_date),
+            ('request_date', '<=', self.report_to_date),
+            ('state', 'in', ['completed', 'cash_issued'])
+        ], order='request_date desc')
 
 
     def action_view_reimbursement_report(self):
@@ -339,13 +351,13 @@ class CashReimbursement(models.Model):
 
         return {
             'type': 'ir.actions.report',
-            'report_name' : 'petty_cash.reimbursement_report',
+            'report_name' : 'petty-cash.reimbursement_report',
             'report_type': 'qweb-pdf',
             'data': {
                 'reimbursement_id' : self.id,
                 'from_date': self.report_from_date,
                 'to_date': self.report_to_date,
             },
-            'context': self.env.context,
-            
+            'context': dict(self.env.context, report_from_date=self.report_from_date, report_to_date=self.report_to_date)
+
         }

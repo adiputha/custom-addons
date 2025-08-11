@@ -41,7 +41,7 @@
         
         #reports
         "report/petty_cash_report_template.xml",
-        "report/petty_cash_report.xml"
+        "report/reimbursement_report_template.xml"
     ],
     "assets": {
         "web.assets_backend": [

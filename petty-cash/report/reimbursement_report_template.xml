@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Reimbursement Report Template as per SRS Figure 24 -->
+    <template id="reimbursement_report_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <!-- Header -->
+                    <div class="text-center">
+                        <h3>GSMB Technical Services (PVT) LTD</h3>
+                        <h4>Petty Cash Float Reimbursement Report</h4>
+                        <p>(Period: <span t-esc="report_from_date"/> - <span t-esc="report_to_date"/>)</p>
+                    </div>
+
+                    <!-- Float Information -->
+                    <div class="row mt-4">
+                        <div class="col-6">
+                            <p><strong>Float:</strong> <span t-esc="reimbursement.float_request_id.name"/></p>
+                            <p><strong>Handler Name:</strong> <span t-esc="reimbursement.handler_name.name"/></p>
+                        </div>
+                        <div class="col-6 text-right">
+                            <p><strong>Total Float Amount:</strong> Rs. <span t-esc="'{:,.2f}'.format(reimbursement.float_request_id.initial_amount)"/></p>
+                        </div>
+                    </div>
+
+                    <!-- Summary Table -->
+                    <table class="table table-bordered mt-3">
+                        <tr>
+                            <td><strong>Total Float Amount</strong></td>
+                            <td>Rs. <span t-esc="'{:,.2f}'.format(reimbursement.float_request_id.initial_amount)"/></td>
+                            <td><strong>Remarks:</strong> <span t-esc="reimbursement.remarks or 'Monthly refill'"/></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Bills to Reimburse</strong></td>
+                            <td>Rs. <span t-esc="'{:,.2f}'.format(reimbursement.required_amount)"/></td>
+                            <td><strong>Justification:</strong> <span t-esc="reimbursement.justification"/></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cash in hand</strong></td>
+                            <td>Rs. <span t-esc="'{:,.2f}'.format(reimbursement.current_balance)"/></td>
+                            <td></td>
+                        </tr>
+                    </table>
+
+                    <!-- Expenses Breakdown -->
+                    <h5 class="mt-4">Expenses Breakdown:</h5>
+                    <p><strong>Bills to Reimburse the Petty Cash Float</strong></p>
+
+                    <!-- Petty Cash Requests Table -->
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Request No</th>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Approved By</th>
+                                <th>Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="petty_cash_requests" t-as="request">
+                                <tr>
+                                    <td><span t-esc="request.name"/></td>
+                                    <td><span t-esc="request.request_by.name"/></td>
+                                    <td><span t-esc="request.request_by.department_id.name"/></td>
+                                    <td><span t-esc="request.category.name"/></td>
+                                    <td>Rs. <span t-esc="'{:,.2f}'.format(request.request_amount)"/></td>
+                                    <td><span t-esc="request.request_date.strftime('%d/%m/%y')"/></td>
+                                    <td><span t-esc="'Manual' if request.request_voucher else 'Portal'"/></td>
+                                    <td><span t-esc="request.state.title()"/></td>
+                                    <td><span t-esc="request.hodApprovedBy.name"/></td>
+                                    <td>Receipt Link</td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <!-- IOU Requests Table -->
+                    <h6 class="mt-3">IOU</h6>
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th>IOU No</th>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Due Date</th>
+                                <th>Approved By</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="iou_requests" t-as="iou">
+                                <tr>
+                                    <td><span t-esc="iou.name"/></td>
+                                    <td><span t-esc="iou.request_by.name"/></td>
+                                    <td><span t-esc="iou.request_by.department_id.name"/></td>
+                                    <td>General</td>
+                                    <td>Rs. <span t-esc="'{:,.2f}'.format(iou.request_amount)"/></td>
+                                    <td><span t-esc="iou.request_date.strftime('%d/%m/%y')"/></td>
+                                    <td><span t-esc="'Manual' if iou.request_voucher else 'Portal'"/></td>
+                                    <td><span t-esc="iou.due_date.strftime('%d/%m/%y')"/></td>
+                                    <td><span t-esc="iou.hodApprovedBy.name"/></td>
+                                    <td><span t-esc="iou.state.title()"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <!-- Footer -->
+                    <div class="mt-4">
+                        <p><small>Report generated on: <span t-esc="datetime.datetime.now().strftime('%Y-%m-%d')"/></small></p>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Report Definition -->
+    <record id="action_reimbursement_report" model="ir.actions.report">
+        <field name="name">Reimbursement Report</field>
+        <field name="model">cash.reimbursement</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">petty-cash.reimbursement_report_template</field>
+        <field name="report_file">petty-cash.reimbursement_report_template</field>
+        <field name="binding_model_id" ref="model_cash_reimbursement"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

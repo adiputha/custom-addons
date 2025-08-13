@@ -28,7 +28,7 @@
                         invisible="state != 'pending'" />
                     <button name="action_view_reimbursement_report" string="Generate Report"
                         type="object" class="btn-info"
-                        invisible="state != 'completed' or not report_from_date or not report_to_date"
+                        invisible="state != 'approved' or not report_from_date or not report_to_date"
                         help="Generate expense report for the specified period" />
                     <field name="state" widget="statusbar"
                         statusbar_visible="draft,pending,approved,completed" />
@@ -209,6 +209,7 @@
             </search>
         </field>
     </record>
+
 
     <!-- Cash Reimbursement Action -->
     <record id="action_cash_reimbursement" model="ir.actions.act_window">

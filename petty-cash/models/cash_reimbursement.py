@@ -348,16 +348,25 @@ class CashReimbursement(models.Model):
         self.ensure_one()
         if not self.report_from_date or not self.report_to_date:
             raise UserError(_("Please set both Report From Date and Report To Date."))
+        
+        petty_cash_expenses = self.get_period_expenses()
 
-        return {
-            'type': 'ir.actions.report',
-            'report_name' : 'petty-cash.reimbursement_report',
-            'report_type': 'qweb-pdf',
-            'data': {
-                'reimbursement_id' : self.id,
-                'from_date': self.report_from_date,
-                'to_date': self.report_to_date,
-            },
-            'context': dict(self.env.context, report_from_date=self.report_from_date, report_to_date=self.report_to_date)
+        iou_requests = self.env['petty.cash.iou.request'].search([
+            ('float_request_id', '=', self.float_request_id.id),
+            ('request_date', '>=', self.report_from_date),
+            ('request_date', '<=', self.report_to_date),
+            ('state', 'in', ['completed', 'pending_bill_submission'])
+        ], order='request_date desc')
 
+        data ={
+            'from_date': self.report_from_date.strftime('%Y-%m-%d'),
+            'to_date': self.report_to_date.strftime('%Y-%m-%d'),
         }
+        
+        context = dict(self.env.context,
+                       petty_cash_requests=petty_cash_expenses,
+                       iou_requests=iou_requests,
+                       )
+
+        return self.with_context(context).env.ref('petty-cash.action_reimbursement_report')\
+                   .report_action(self, data=data)

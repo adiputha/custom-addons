@@ -1,6 +1,6 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
-from datetime import datetime
+from datetime import datetime, time
 
 
 class CashReimbursement(models.Model):
@@ -332,13 +332,18 @@ class CashReimbursement(models.Model):
     
     
     def get_period_expenses(self):
+        """Get petty cash expenses for the specified period"""
         if not self.report_from_date or not self.report_to_date:
             return self.env['petty.cash.request']
         
+        
+        from_datetime = f"{self.report_from_date} 00:00:00"
+        to_datetime = f"{self.report_to_date} 23:59:59"
+        
         return self.env['petty.cash.request'].search([
             ('float_request_id', '=', self.float_request_id.id),
-            ('request_date', '>=', self.report_from_date),
-            ('request_date', '<=', self.report_to_date),
+            ('request_date', '>=', from_datetime),
+            ('request_date', '<=', to_datetime),
             ('state', 'in', ['completed', 'cash_issued'])
         ], order='request_date desc')
 
@@ -349,20 +354,26 @@ class CashReimbursement(models.Model):
         if not self.report_from_date or not self.report_to_date:
             raise UserError(_("Please set both Report From Date and Report To Date."))
         
+        
         petty_cash_expenses = self.get_period_expenses()
+
+        
+        from_datetime = f"{self.report_from_date} 00:00:00"
+        to_datetime = f"{self.report_to_date} 23:59:59"
 
         iou_requests = self.env['petty.cash.iou.request'].search([
             ('float_request_id', '=', self.float_request_id.id),
-            ('request_date', '>=', self.report_from_date),
-            ('request_date', '<=', self.report_to_date),
+            ('request_date', '>=', from_datetime),
+            ('request_date', '<=', to_datetime),
             ('state', 'in', ['completed', 'pending_bill_submission'])
         ], order='request_date desc')
 
-        data ={
+        data = {
             'from_date': self.report_from_date.strftime('%Y-%m-%d'),
             'to_date': self.report_to_date.strftime('%Y-%m-%d'),
         }
         
+       
         context = dict(self.env.context,
                        petty_cash_requests=petty_cash_expenses,
                        iou_requests=iou_requests,

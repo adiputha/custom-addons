@@ -3,6 +3,12 @@ from odoo.exceptions import UserError, ValidationError
 from datetime import datetime, time
 
 
+
+import logging
+
+_logger = logging.getLogger(__name__)
+
+
 class CashReimbursement(models.Model):
     _name = "cash.reimbursement"
     _description = "Cash Reimbursement"
@@ -336,48 +342,148 @@ class CashReimbursement(models.Model):
         if not self.report_from_date or not self.report_to_date:
             return self.env['petty.cash.request']
         
-        
-        from_datetime = f"{self.report_from_date} 00:00:00"
-        to_datetime = f"{self.report_to_date} 23:59:59"
-        
-        return self.env['petty.cash.request'].search([
-            ('float_request_id', '=', self.float_request_id.id),
-            ('request_date', '>=', from_datetime),
-            ('request_date', '<=', to_datetime),
-            ('state', 'in', ['completed', 'cash_issued'])
-        ], order='request_date desc')
+        try:
+            from_datetime = f"{self.report_from_date} 00:00:00",
+            to_datetime = f"{self.report_to_date} 23:59:59"
 
+            valid_states = ['completed', 'cash_issued']
+
+            expenses = self.env['petty.cash.request'].search([
+                ('float_request_id', '=', self.float_request_id.id),
+                ('request_date', '>=', from_datetime),
+                ('request_date', '<=', to_datetime),
+                ('request_amount', '>', 0),
+                ('state', 'in', valid_states)
+            ], order='request_date desc')
+            
+            _logger.info(f"Found {len(expenses)} petty cash expenses for period {self.report_from_date} to {self.report_to_date}")
+            return expenses
+
+        except Exception as e:
+            _logger.error("Error fetching petty cash expenses: %s", e)
+            return self.env['petty.cash.request']
 
     def action_view_reimbursement_report(self):
         """Action to view reimbursement report"""
         self.ensure_one()
         if not self.report_from_date or not self.report_to_date:
             raise UserError(_("Please set both Report From Date and Report To Date."))
+    
+        try:
+            
+            petty_cash_expenses = self.get_period_expenses()
         
+            from_datetime = f"{self.report_from_date} 00:00:00"
+            to_datetime = f"{self.report_to_date} 23:59:59"
+
+            iou_requests = self.env['petty.cash.iou.request'].search([
+                ('float_request_id', '=', self.float_request_id.id),
+                ('request_date', '>=', from_datetime),
+                ('request_date', '<=', to_datetime),
+                ('state', 'in', ['completed', 'pending_bill_submission'])
+            ], order='request_date desc')
+
+            
+            petty_cash_data = []
+            for expense in petty_cash_expenses:
+                try:
+                    petty_cash_data.append({
+                        'name': str(expense.name) if expense.name else 'N/A',
+                        'request_by_name': expense.request_by.name if expense.request_by else 'Unknown',
+                        'department_name': expense.request_by.department_id.name if expense.request_by and expense.request_by.department_id else 'N/A',
+                        'category_name': expense.category.name if expense.category else 'General',
+                        'request_amount': float(expense.request_amount) if expense.request_amount else 0.0,
+                        'request_date': expense.request_date.strftime('%Y-%m-%d') if expense.request_date else 'N/A',
+                        'has_voucher': bool(expense.request_voucher),
+                        'state': expense.state.replace('_', ' ').title() if expense.state else 'Unknown',
+                        'approved_by_name': expense.hodApprovedBy.name if expense.hodApprovedBy else 'N/A',
+                        'has_received_voucher': bool(expense.received_voucher),
+                    })
+                except Exception as e:
+                    _logger.error(f"Error processing expense {expense.id}: {e}")
+                    
+                    petty_cash_data.append({
+                        'name': 'Error',
+                        'request_by_name': 'Error',
+                        'department_name': 'N/A',
+                        'category_name': 'General',
+                        'request_amount': 0.0,
+                        'request_date': 'N/A',
+                        'has_voucher': False,
+                        'state': 'Error',
+                        'approved_by_name': 'N/A',
+                        'has_received_voucher': False,
+                    })
+
+            iou_data = []
+            for iou in iou_requests:
+                try:
+                    iou_data.append({
+                        'name': str(iou.name) if iou.name else 'N/A',
+                        'request_by_name': iou.request_by.name if iou.request_by else 'Unknown',
+                        'department_name': iou.request_by.department_id.name if iou.request_by and iou.request_by.department_id else 'N/A',
+                        'request_amount': float(iou.request_amount) if iou.request_amount else 0.0,
+                        'request_date': iou.request_date.strftime('%Y-%m-%d') if iou.request_date else 'N/A',
+                        'due_date': iou.due_date.strftime('%Y-%m-%d') if iou.due_date else 'N/A',
+                        'has_voucher': bool(iou.request_voucher),
+                        'state': iou.state.replace('_', ' ').title() if iou.state else 'Unknown',
+                        'approved_by_name': iou.hodApprovedBy.name if iou.hodApprovedBy else 'N/A',
+                    })
+                except Exception as e:
+                    _logger.error(f"Error processing IOU {iou.id}: {e}")
+                    iou_data.append({
+                        'name': 'Error',
+                        'request_by_name': 'Error',
+                        'department_name': 'N/A',
+                        'request_amount': 0.0,
+                        'request_date': 'N/A',
+                        'due_date': 'N/A',
+                        'has_voucher': False,
+                        'state': 'Error',
+                        'approved_by_name': 'N/A',
+                    })
+                    
+            reimbursement_data = {
+                'name': str(self.name) if self.name else 'N/A',
+                'float_name': self.float_request_id.name if self.float_request_id else 'N/A',
+                'handler_name': self.handler_name.name if self.handler_name else 'N/A',
+                'total_float_amount': float(self.float_request_id.initial_amount) if self.float_request_id and self.float_request_id.cash_in_hand else 0.0,
+                'required_amount': float(self.required_amount) if self.required_amount else 0.0,
+                'current_balance': float(self.current_balance) if self.current_balance else 0.0,
+                'remarks': str(self.remarks) if self.remarks else 'Monthly Refill',
+                'justification': str(self.justification) if self.justification else '',
+                'report_from_date': self.report_from_date.strftime('%Y-%m-%d') if self.report_from_date else 'N/A',
+                'report_to_date': self.report_to_date.strftime('%Y-%m-%d') if self.report_to_date else 'N/A',
+            }
+            
+            petty_cash_total = sum(item['request_amount'] for item in petty_cash_data)
+            iou_total = sum(item['request_amount'] for item in iou_data)
+
+            data = {
+                'from_date': self.report_from_date.strftime('%Y-%m-%d'),
+                'to_date': self.report_to_date.strftime('%Y-%m-%d'),
+                'petty_cash_total': petty_cash_total,
+                'iou_total': iou_total,
+                'grand_total': petty_cash_total + iou_total
+            }
+            
         
-        petty_cash_expenses = self.get_period_expenses()
+            context = dict(
+                self.env.context,
+                petty_cash_data=petty_cash_data,
+                iou_data=iou_data,
+                report_summary=data,
+                reimbursement_info=reimbursement_data,
+            )
+            
+            _logger.info(f"Generating reimbursement report for {self.name} from {self.report_from_date} to {self.report_to_date}")
+            _logger.info(f"report dates - From {self.report_from_date} to {self.report_to_date}")
 
-        
-        from_datetime = f"{self.report_from_date} 00:00:00"
-        to_datetime = f"{self.report_to_date} 23:59:59"
-
-        iou_requests = self.env['petty.cash.iou.request'].search([
-            ('float_request_id', '=', self.float_request_id.id),
-            ('request_date', '>=', from_datetime),
-            ('request_date', '<=', to_datetime),
-            ('state', 'in', ['completed', 'pending_bill_submission'])
-        ], order='request_date desc')
-
-        data = {
-            'from_date': self.report_from_date.strftime('%Y-%m-%d'),
-            'to_date': self.report_to_date.strftime('%Y-%m-%d'),
-        }
-        
-       
-        context = dict(self.env.context,
-                       petty_cash_requests=petty_cash_expenses,
-                       iou_requests=iou_requests,
-                       )
-
-        return self.with_context(context).env.ref('petty-cash.action_reimbursement_report')\
-                   .report_action(self, data=data)
+            return self.with_context(context).env.ref('petty-cash.action_reimbursement_report')\
+                    .report_action(self, data=data)
+                   
+        except Exception as e:
+            _logger.error(f"Error generating reimbursement report: {e}")
+            import traceback
+            _logger.error(traceback.format_exc())
+            raise UserError(_("Error generating report. Please check the logs and try again."))

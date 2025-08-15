@@ -153,10 +153,141 @@ class PettyCashRequest(models.Model):
 
     received_voucher_filename = fields.Char(string="Received Voucher Filename")
 
-    remarks = fields.Text(
-        string="Remarks",
+    description = fields.Text(
+        string="Description",
         help="Additional remarks or comments regarding the petty cash request",
     )
+    
+    bill_settlement_ids = fields.One2many(
+        "petty.cash.bill.settlement",
+        "petty_cash_request_id",
+        string="Bill Settlements",
+        help="List of bill settlements related to this petty cash request"
+    )
+    
+    settlement_amount = fields.Float(
+        string= 'Settlement Amount',
+        compute='_compute_settlement_amount',
+        store=True,
+        help="Total amount of all related bill settlements"
+    )
+    
+    settlement_date = fields.Datetime(
+        string='Settlement Date',
+        compute='_compute_settlement_date',
+        store=True,
+        help="Latest settlement date from approved bills"
+    )
+    
+    has_pending_bills = fields.Boolean(
+        string='Has Pending Bills',
+        compute='_compute_has_pending_bills',
+        help='True if there are bills pending approval'
+    )
+    
+    reason_in_advance = fields.Text(
+        string='Reason for Advance',
+        help="Reason for requesting advance payment (for IOU requests)"
+    )
+    
+    @api.depends('bill_settlement_ids.amount', 'bill_settlement_ids.status')
+    def _compute_settlement_amount(self):
+        """Compute the total settlement amount from approved bills"""
+        for record in self:
+            approved_bills = record.bill_settlement_ids.filtered(lambda b: b.status == 'approved')
+            record.settlement_amount = sum(approved_bills.mapped('amount'))
+            
+    @api.depends('bill_settlement_ids.date', 'bill_settlement_ids.status')
+    def _compute_settlement_date(self):
+        """Compute the latest settlement date from approved bills"""
+        for record in self:
+            approved_bills = record.bill_settlement_ids.filtered(lambda b: b.status == 'approved')
+            if approved_bills:
+                record.settlement_date = max(approved_bills.mapped('approval_date'))
+            else:
+                record.settlement_date = False
+                
+                
+    def action_approve_selected_bills(self):
+        """Action to approve selected bills"""
+        self.ensure_one()
+        pending_bills = self.bill_settlement_ids.filtered(
+            lambda b: b.action == 'approve' and b.status in ['submitted', 'draft']
+        )
+        
+        if not pending_bills:
+            raise UserError(_("No bills selected for approval."))
+        
+        for bill in pending_bills:
+            if bill.status == 'draft':
+                bill.action_submit()
+            bill.action_approve()
+        
+        self.message_post(
+            body=_("Approved %d bills totaling Rs. %.2f") % (
+                len(pending_bills), 
+                sum(pending_bills.mapped('amount'))
+            )
+        )
+        return True
+    
+    def action_reject_selected_bills(self):
+        """Action to reject selected bills"""
+        self.ensure_one()
+        pending_bills = self.bill_settlement_ids.filtered(
+            lambda b: b.action == 'reject' and b.status in ['submitted', 'draft']
+        )
+        
+        if not pending_bills:
+            raise UserError(_("No bills selected for rejection."))
+
+        bills_without_remarks = pending_bills.filtered(lambda b: not b.rejection_reason)
+        
+        if bills_without_remarks:
+            raise UserError(_("Please provide a Reason for the bills you want to reject."))
+
+        for bill in pending_bills:
+            if bill.status == 'draft':
+                bill.action_submit()
+            bill.action_reject()
+            
+        self.message_post(
+            body=_("Rejected %d bills totaling Rs. %.2f") % (
+                len(pending_bills),
+                sum(pending_bills.mapped('amount'))
+            )
+        )
+        return True
+    
+    def action_submit_all_bills(self):
+        """Action to submit all bills"""
+        self.ensure_one()
+        
+        draft_bills = self.bill_settlement_ids.filtered(lambda b: b.status == 'draft')
+        if not draft_bills:
+            raise UserError(_("No draft bills found to submit."))
+        
+        total_bill_amount = sum(self.bill_settlement_ids.mapped('amount'))
+        if abs(total_bill_amount - self.request_amount) > 0.01:
+            raise UserError(_("Total bill amount does not match the request amount."))
+
+        for bill in draft_bills:
+            bill.action_submit()
+            
+        self.message_post(
+            body=_("Submitted %d bills totaling Rs. %.2f") % (
+                len(draft_bills),
+                sum(draft_bills.mapped('amount'))
+            )
+        )
+        return True
+
+    @api.depends('bill_settlement_ids.status')
+    def _compute_pending_bills(self):
+        """Check if there are pending bills"""
+        for record in self:
+            pending_bills = record.bill_settlement_ids.filtered(lambda b: b.status in ['draft', 'submitted'])
+            record.has_pending_bills = bool(pending_bills)
 
     @api.depends("request_date")
     def _compute_due_date(self):
@@ -285,6 +416,18 @@ class PettyCashRequest(models.Model):
 
         if not self.received_voucher:
             raise UserError(_("Please attach the signed received voucher"))
+        
+        if self.bill_settlement_ids:
+            pending_bills = self.bill_settlement_ids.filtered(lambda b: b.status in ['draft', 'submitted'])
+            if pending_bills:
+                raise UserError(_("All bills must be approved or rejected before completing the request"))
+            
+           
+            if abs(self.settlement_amount - self.request_amount) > 0.01:
+                raise UserError(
+                    _("Settlement amount (Rs. %.2f) should equal request amount (Rs. %.2f)") % 
+                    (self.settlement_amount, self.request_amount)
+                )
 
         self.state = "completed"
         self.message_post(body=_("Request completed successfully"))

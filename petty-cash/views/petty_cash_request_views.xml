@@ -1,33 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- List view -->
-    <record id="petty_cash_request_tree_view" model="ir.ui.view">
+    <!-- Updated Form view for Petty Cash Request with Bill Settlements -->
+    <record id="petty_cash_request_form_view_updated" model="ir.ui.view">
+        <field name="name">petty.cash.request.form.updated</field>
         <field name="model">petty.cash.request</field>
-        <field name="name">petty.cash.request.list</field>
-        <field name="arch" type="xml">
-            <list string="Petty Cash Requests"
-                decoration-success="state == 'completed'"
-                decoration-info="state == 'cashIssued'"
-                decoration-warning="state == 'requested'"
-                decoration-muted="state == 'draft'"
-                decoration-danger="state == 'cancelled'">
-                <field name="request_date" />
-                <field name="name" string="Request No" />
-                <field name="float_request_id" string="Float Name" />
-                <field name="request_type" string="Type" widget="badge" />
-                <field name="request_by" string="Requested By" />
-                <field name="category" string="Category" />
-                <field name="request_amount" string="Amount" sum="TotalAmount" />
-                <field name="hodApprovedBy" string="Approved By" />
-                <field name="state" string="Status" widget="badge" />
-            </list>
-        </field>
-    </record>
-
-    <!-- Form view-->
-    <record id="petty_cash_request_form_view" model="ir.ui.view">
-        <field name="name">petty.cash.request.form</field>
-        <field name="model">petty.cash.request</field>
+        <field name="priority">2</field>
         <field name="arch" type="xml">
             <form>
                 <header>
@@ -54,97 +31,186 @@
                         </h1>
                     </div>
 
-                    <group>
+                    <!-- Alert Messages -->
+                    <div class="alert alert-info" invisible="state != 'draft'">
+                        <div class="d-flex align-items-center">
+                            <i class="fa fa-info-circle me-2"></i>
+                            <div>
+                                <strong>Draft Request</strong>
+                                <p class="mb-0">Fill in all required fields and submit for approval
+                                    when ready.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning" invisible="state != 'cash_issued'">
+                        <div class="d-flex align-items-center">
+                            <i class="fa fa-money me-2"></i>
+                            <div>
+                                <strong>Cash Issued</strong>
+                                <p class="mb-0">Please confirm cash receipt and upload signed
+                                    voucher to complete.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <group string="Request Information">
                         <group>
                             <field name="request_by" />
-                            <!-- employee dept needs to be here -->
-                            <field name="float_request_id" />
+                            <field name="float_request_id"
+                                domain="[('state', '=', 'approved')]"
+                                options="{'no_create': True}" />
                             <field name="request_date" />
                             <field name="due_date" />
-                            <field name="request_voucher" filename="request_voucher_filename" />
-                            <field name="category" />
-
-
+                            <field name="category" options="{'no_create': True}" />
                         </group>
                         <group>
-                            <field name="request_amount" />
-                            <field name="isHodApproved" />
-                            <field name="hodApprovedBy" invisible="not isHodApproved" />
-                            <field name="isFloatManagerApproved" />
-                            <field name="floatManagerApprovedBy"
-                                invisible="not isFloatManagerApproved" />
-                            <field name="cashReceivedByEmployee"
-                                invisible="state not in ['cash_issued', 'completed']" />
-                            <field name="received_voucher"
-                                invisible="state not in ['cash_issued', 'completed']" />
+                            <field name="request_amount" widget="monetary" />
+                            <field name="request_voucher" filename="request_voucher_filename" />
+                            <field name="request_voucher_filename" invisible="1" />
                         </group>
                     </group>
 
-                    <group>
-                        <field name="remarks" />
+                    <!-- Approval Information -->
+                    <group string="Approvals" invisible="state != 'draft'">
+                        <group>
+                            <field name="isHodApproved" />
+                            <field name="hodApprovedBy" invisible="not isHodApproved" />
+                        </group>
+                        <group>
+                            <field name="isFloatManagerApproved" />
+                            <field name="floatManagerApprovedBy"
+                                invisible="not isFloatManagerApproved" />
+                        </group>
+                    </group>
+
+                    <!-- Cash Receipt Information -->
+                    <group string="Cash Receipt"
+                        invisible="state not in ['cash_issued', 'completed']">
+                        <group>
+                            <field name="cashReceivedByEmployee" />
+                            <field name="received_voucher" filename="received_voucher_filename"
+                                invisible="not cashReceivedByEmployee" />
+                            <field name="received_voucher_filename" invisible="1" />
+                        </group>
+                    </group>
+
+                    <!-- Remarks Section -->
+                    <group string="Additional Information">
+                        <field name="description" nolabel="1"
+                            placeholder="Enter any additional remarks or comments..." />
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <!-- Search view with category filter -->
-    <record id="petty_cash_request_search_view" model="ir.ui.view">
-        <field name="name">petty.cash.request.search</field>
+    <!-- Employee Portal Form View (simplified) -->
+    <record id="petty_cash_request_employee_form_view" model="ir.ui.view">
+        <field name="name">petty.cash.request.employee.form</field>
         <field name="model">petty.cash.request</field>
+        <field name="priority">3</field>
         <field name="arch" type="xml">
-            <search string="Search Petty Cash Requests">
-                <field name="name" />
-                <field name="request_by" />
-                <field name="category" />
-                <field name="request_amount" />
-                <separator />
-                <filter name="my_requests" string="My Requests"
-                    domain="[('request_by', '=', uid)]" />
-                <filter name="pending_approval" string="Pending Approval"
-                    domain="[('state', 'in', ['requested', 'hod_approval_pending', 'float_manager_approval_pending'])]" />
-                <filter name="approved" string="Approved"
-                    domain="[('state', 'in', ['hod_approved', 'float_manager_approved', 'cash_issued'])]" />
-                <separator />
-                <filter name="petty_cash_only" string="Petty Cash Only"
-                    domain="[('request_type', '=', 'petty_cash')]" />
-                <filter name="iou_only" string="IOU Only"
-                    domain="[('request_type', '=', 'iou')]" />
+            <form>
+                <header>
+                    <button name="action_submit" string="Submit Request" type="object"
+                        class="btn-primary"
+                        invisible="state != 'draft'" />
+                    <button name="action_cancel" string="Cancel Request" type="object"
+                        invisible="state not in ['draft', 'requested']" />
+                    <field name="state" widget="statusbar" />
+                </header>
 
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="request_type" widget="selection"
+                                readonly="state != 'draft'" />
+                            <span> Request</span>
+                        </h1>
+                    </div>
 
-                <separator />
-                <group expand="0" string="Group By">
-                    <filter name="group_by_category" string="Category"
-                        context="{'group_by': 'category'}" />
-                    <filter name="group_by_type" string="Request Type"
-                        context="{'group_by': 'request_type'}" />
-                    <filter name="group_by_state" string="Status"
-                        context="{'group_by': 'state'}" />
-                    <filter name="group_by_requester" string="Requested By"
-                        context="{'group_by': 'request_by'}" />
-                    <filter name="filter_by_float" string="Float Name"
-                        domain="[]" context="{'group_by': 'float_request_id'}" />
-                </group>
-            </search>
+                    <group>
+                        <group>
+                            <field name="request_by" readonly="1" />
+                            <field name="float_request_id"
+                                domain="[('state', '=', 'approved')]"
+                                readonly="state != 'draft'" />
+                            <field name="request_date" readonly="1" />
+                            <field name="due_date" readonly="1" />
+                        </group>
+                        <group>
+                            <field name="category" readonly="state != 'draft'" />
+                            <field name="request_amount" widget="monetary"
+                                readonly="state != 'draft'" />
+                        </group>
+                    </group>
+
+                    <!-- IOU Details for Employee Portal -->
+                    <group string="IOU Details"
+                        invisible="request_type != 'iou'">
+                        <field name="reason_in_advance" string="Reason for Advance"
+                            placeholder="Please explain why you need this advance payment..."
+                            readonly="state != 'draft'" />
+                    </group>
+
+                    <!-- View Only Information -->
+                    <group string="Request Status" invisible="state in ['draft']">
+                        <group>
+                            <field name="isHodApproved" readonly="1" />
+                            <field name="hodApprovedBy" readonly="1"
+                                invisible="not isHodApproved" />
+                        </group>
+                        <group>
+                            <field name="isFloatManagerApproved" readonly="1" />
+                            <field name="floatManagerApprovedBy" readonly="1"
+                                invisible="not isFloatManagerApproved" />
+                        </group>
+                    </group>
+
+                    <group string="Description">
+                        <field name="description" nolabel="1"
+                            placeholder="Any additional comments..."
+                            readonly="state not in ['draft', 'requested']" />
+                    </group>
+                </sheet>
+            </form>
         </field>
     </record>
 
-    <!-- window action-->
-    <record id="action_petty_cash_requests" model="ir.actions.act_window">
-        <field name="name">Petty Cash Requests</field>
+    <!-- Updated List View -->
+    <record id="petty_cash_request_tree_view_updated" model="ir.ui.view">
+        <field name="model">petty.cash.request</field>
+        <field name="name">petty.cash.request.list.updated</field>
+        <field name="priority">2</field>
+        <field name="arch" type="xml">
+            <list string="Petty Cash Requests"
+                decoration-success="state == 'completed'"
+                decoration-info="state == 'cash_issued'"
+                decoration-warning="state == 'requested'"
+                decoration-muted="state == 'draft'"
+                decoration-danger="state == 'cancelled'">
+                <field name="request_date" />
+                <field name="name" string="Request No" />
+                <field name="float_request_id" string="Float Name" />
+                <field name="request_by" string="Requested By" />
+                <field name="category" string="Category" />
+                <field name="request_amount" string="Requested" widget="monetary"
+                    sum="Total Requested" />
+                <field name="hodApprovedBy" string="Approved By" />
+                <field name="state" string="Status" widget="badge" />
+            </list>
+        </field>
+    </record>
+
+    <!-- Action for Handler Portal -->
+    <record id="action_petty_cash_requests_handler" model="ir.actions.act_window">
+        <field name="name">Petty Cash Requests - Handler Portal</field>
         <field name="res_model">petty.cash.request</field>
         <field name="view_mode">list,form</field>
-        <field name="search_view_id" ref="petty_cash_request_search_view" />
-        <!-- <field name="domain">[('float_request_id', '=',
-            context.get('search_default_float_request_id'))]</field> -->
+        <field name="domain">[('request_type', '=', 'petty_cash')]</field>
         <field name="context">{'default_request_type': 'petty_cash'}</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Create Petty Cash Requests
-            </p>
-            <p>
-                Click "New" to create a new petty cash request for manual processing.
-            </p>
-        </field>
     </record>
+
 </odoo>

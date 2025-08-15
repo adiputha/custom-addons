@@ -49,3 +49,9 @@ access_cash_reimbursement_user,cash.reimbursement.user,model_cash_reimbursement,
 access_cash_reimbursement_manager,cash.reimbursement.manager,model_cash_reimbursement,base.group_erp_manager,1,1,1,1
 access_cash_reimbursement_admin,cash.reimbursement.admin,model_cash_reimbursement,base.group_system,1,1,1,1
 access_cash_reimbursement_accountant,cash.reimbursement.accountant,model_cash_reimbursement,account.group_account_user,1,1,1,1
+
+
+access_petty_cash_bill_settlement_user,petty.cash.bill.settlement.user,model_petty_cash_bill_settlement,base.group_user,1,1,1,0
+access_petty_cash_bill_settlement_manager,petty.cash.bill.settlement.manager,model_petty_cash_bill_settlement,base.group_erp_manager,1,1,1,1
+access_petty_cash_bill_settlement_admin,petty.cash.bill.settlement.admin,model_petty_cash_bill_settlement,base.group_system,1,1,1,1
+access_petty_cash_bill_settlement_accountant,petty.cash.bill.settlement.accountant,model_petty_cash_bill_settlement,account.group_account_user,1,1,1,1

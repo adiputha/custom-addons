@@ -1,216 +1,295 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Updated Form view for Petty Cash Request with Bill Settlements -->
-    <record id="petty_cash_request_form_view_updated" model="ir.ui.view">
-        <field name="name">petty.cash.request.form.updated</field>
-        <field name="model">petty.cash.request</field>
-        <field name="priority">2</field>
-        <field name="arch" type="xml">
-            <form>
-                <header>
-                    <button name="action_submit" string="Submit" type="object"
-                        class="btn-primary"
-                        invisible="state != 'draft'" />
-                    <button name="action_cancel" string="Cancel Request" type="object"
-                        invisible="state not in ['draft', 'requested']" />
-                    <button name="action_cash_issued" string="Cash Issued" type="object"
-                        class="btn-primary"
-                        invisible="state != 'requested'"
-                        groups="base.group_user" />
-                    <button name="action_complete_request" string="Complete Request" type="object"
-                        class="btn-success"
-                        invisible="state != 'cash_issued' or not cashReceivedByEmployee or not received_voucher" />
-                    <field name="state" widget="statusbar"
-                        statusbar_visible="draft,requested,cash_issued,completed" />
-                </header>
+    <data>
+        <!-- Main Tree view for Petty Cash Requests -->
+        <record id="petty_cash_request_tree_view" model="ir.ui.view">
+            <field name="model">petty.cash.request</field>
+            <field name="name">petty.cash.request.list</field>
+            <field name="arch" type="xml">
+                <list string="Petty Cash Requests"
+                    decoration-success="state == 'completed'"
+                    decoration-info="state == 'cash_issued'"
+                    decoration-warning="state == 'requested'"
+                    decoration-muted="state == 'draft'"
+                    decoration-danger="state == 'cancelled'">
+                    <field name="request_date" />
+                    <field name="name" string="Request No" />
+                    <field name="float_request_id" string="Float Name" />
+                    <field name="request_by" string="Requested By" />
+                    <field name="category" string="Category" />
+                    <field name="request_amount" string="Requested" widget="monetary"
+                        sum="Total Requested" />
+                    <field name="settlement_amount" string="Bills Total" widget="monetary"
+                        sum="Total Bills" />
+                    <field name="hodApprovedBy" string="Approved By" />
+                    <field name="state" string="Status" widget="badge" />
+                </list>
+            </field>
+        </record>
 
-                <sheet>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="name" readonly="1" />
-                        </h1>
-                    </div>
+        <!-- Form view for Petty Cash Request -->
+        <record id="petty_cash_request_form_view" model="ir.ui.view">
+            <field name="name">petty.cash.request.form</field>
+            <field name="model">petty.cash.request</field>
+            <field name="priority">1</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="action_submit" string="Submit" type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'" />
+                        <button name="action_cancel" string="Cancel Request" type="object"
+                            invisible="state not in ['draft', 'requested']" />
+                        <button name="action_submit_all_bills" string="Submit Bills" type="object"
+                            class="btn-primary"
+                            invisible="state != 'requested' or not bill_settlement_ids" />
+                        <button name="action_cash_issued" string="Issue Cash" type="object"
+                            class="btn-primary"
+                            invisible="state != 'requested'"
+                            groups="base.group_user" />
+                        <button name="action_complete_petty_cash" string="Complete Request"
+                            type="object"
+                            class="btn-success"
+                            invisible="state != 'cash_issued' or not cashReceivedByEmployee or not received_voucher" />
+                        <field name="state" widget="statusbar"
+                            statusbar_visible="draft,requested,cash_issued,completed" />
+                    </header>
 
-                    <!-- Alert Messages -->
-                    <div class="alert alert-info" invisible="state != 'draft'">
-                        <div class="d-flex align-items-center">
-                            <i class="fa fa-info-circle me-2"></i>
-                            <div>
-                                <strong>Draft Request</strong>
-                                <p class="mb-0">Fill in all required fields and submit for approval
-                                    when ready.</p>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1" />
+                            </h1>
+                        </div>
+
+                        <!-- Alert Messages -->
+                        <div class="alert alert-info" invisible="state != 'draft'">
+                            <div class="d-flex align-items-center">
+                                <i class="fa fa-info-circle me-2"></i>
+                                <div>
+                                    <strong>Draft Request</strong>
+                                    <p class="mb-0">Fill in all required fields and submit when
+                                        ready.</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="alert alert-warning" invisible="state != 'cash_issued'">
-                        <div class="d-flex align-items-center">
-                            <i class="fa fa-money me-2"></i>
-                            <div>
-                                <strong>Cash Issued</strong>
-                                <p class="mb-0">Please confirm cash receipt and upload signed
-                                    voucher to complete.</p>
+                        <div class="alert alert-warning" invisible="state != 'requested'">
+                            <div class="d-flex align-items-center">
+                                <i class="fa fa-file-text me-2"></i>
+                                <div>
+                                    <strong>Request Submitted</strong>
+                                    <p class="mb-0">Add your anticipated expense bills below. Total
+                                        must equal request amount before cash can be issued.</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Basic Information -->
-                    <group string="Request Information">
-                        <group>
-                            <field name="request_by" />
-                            <field name="float_request_id"
-                                domain="[('state', '=', 'approved')]"
-                                options="{'no_create': True}" />
-                            <field name="request_date" />
-                            <field name="due_date" />
-                            <field name="category" options="{'no_create': True}" />
+                        <div class="alert alert-success" invisible="state != 'cash_issued'">
+                            <div class="d-flex align-items-center">
+                                <i class="fa fa-money me-2"></i>
+                                <div>
+                                    <strong>Cash Issued</strong>
+                                    <p class="mb-0">Cash has been issued. Please confirm receipt
+                                        below.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Basic Information -->
+                        <group string="Request Information">
+                            <group>
+                                <field name="request_by" />
+                                <field name="float_request_id"
+                                    domain="[('state', '=', 'approved')]"
+                                    options="{'no_create': True}" />
+                                <field name="request_date" />
+                                <field name="due_date" />
+                                <field name="category" options="{'no_create': True}" />
+                            </group>
+                            <group>
+                                <field name="request_amount" widget="monetary" />
+                                <field name="settlement_amount" widget="monetary"
+                                    invisible="state not in ['requested', 'cash_issued', 'completed']" />
+                                <field name="request_voucher" filename="request_voucher_filename" />
+                                <field name="request_voucher_filename" invisible="1" />
+                            </group>
                         </group>
-                        <group>
-                            <field name="request_amount" widget="monetary" />
-                            <field name="request_voucher" filename="request_voucher_filename" />
-                            <field name="request_voucher_filename" invisible="1" />
+
+                        <!-- Approval Information -->
+                        <group string="Approvals" invisible="state != 'draft'">
+                            <group>
+                                <field name="isHodApproved" />
+                                <field name="hodApprovedBy" invisible="not isHodApproved" />
+                            </group>
+                            <group>
+                                <field name="isFloatManagerApproved" />
+                                <field name="floatManagerApprovedBy"
+                                    invisible="not isFloatManagerApproved" />
+                            </group>
                         </group>
+
+                        <!-- Cash Receipt Information -->
+                        <group string="Cash Receipt Confirmation"
+                            invisible="state not in ['cash_issued', 'completed']">
+                            <group>
+                                <field name="cashReceivedByEmployee" />
+                                <field name="received_voucher" filename="received_voucher_filename"
+                                    invisible="not cashReceivedByEmployee" />
+                                <field name="received_voucher_filename" invisible="1" />
+                            </group>
+                        </group>
+
+                        <!-- Bill Settlements Section -->
+                        <group string="Anticipated Expense Bills"
+                            invisible="state not in ['requested', 'cash_issued', 'completed']">
+
+                            <!-- Instructions for requested state -->
+                            <div class="alert alert-info" invisible="state != 'requested'">
+                                <strong>Instructions:</strong>
+                                <ul class="mb-0">
+                                    <li>Add anticipated expense bills below.</li>
+                                    <li>Total amount must equal your request amount - Rs. <field name="request_amount" nolabel="1" readonly="1" /></li>
+                                    <li>Attach receipts/quotes for each anticipated expense.</li>
+                                    <li>Click "Submit Bills" when ready for approval.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Action buttons for requested state -->
+                            <group invisible="state != 'requested'">
+                                <button name="action_approve_selected_bills"
+                                    string="Approve Selected"
+                                    type="object"
+                                    class="btn-success"
+                                     />
+                                <button name="action_reject_selected_bills"
+                                    string="Reject Selected"
+                                    type="object"
+                                    class="btn-warning"
+                                    />
+                            </group>
+
+                            <!-- Bill settlements embedded list -->
+                            <field name="bill_settlement_ids"
+                                context="{'default_petty_cash_request_id': id}">
+                                <list editable="bottom"
+                                    decoration-success="status == 'approved'"
+                                    decoration-warning="status == 'submitted'"
+                                    decoration-danger="status == 'rejected'"
+                                    decoration-info="status == 'draft'">
+                                    <field name="date" />
+                                    <field name="category" />
+                                    <field name="amount" sum="Total Amount" widget="monetary" />
+                                    <field name="attach_receipt" filename="receipt_filename" />
+                                    <field name="action" widget="selection"
+                                        readonly="parent.state != 'requested'"
+                                        invisible="parent.state != 'requested'" />
+                                    <field name="status" readonly="1" widget="badge" />
+                                    <field name="description"
+                                        readonly="parent.state not in ['requested']" />
+                                    <field name="rejection_reason"
+                                        readonly="parent.state != 'requested'"
+                                        invisible="action != 'reject'" />
+                                </list>
+                            </field>
+
+                            <!-- Summary information -->
+                            <group invisible="not bill_settlement_ids">
+                                <group>
+                                    <label for="request_amount" string="Request Amount" />
+                                    <div>
+                                        <field name="request_amount" widget="monetary" readonly="1"
+                                            nolabel="1" />
+                                    </div>
+                                </group>
+                                <group>
+                                    <label for="settlement_amount" string="Bills Total" />
+                                    <div>
+                                        <field name="settlement_amount" widget="monetary"
+                                            readonly="1"
+                                            nolabel="1" />
+                                        <span
+                                            invisible="settlement_amount == request_amount"
+                                            class="text-danger ms-2">
+                                            <i class="fa fa-exclamation-triangle"></i> Must equal
+                                            request amount </span>
+                                        <span
+                                            invisible="settlement_amount != request_amount"
+                                            class="text-success ms-2">
+                                            <i class="fa fa-check"></i> Amounts match </span>
+                                    </div>
+                                </group>
+                            </group>
+                        </group>
+
+                        <!-- Additional Information -->
+                        <group string="Additional Information">
+                            <field name="description" nolabel="1"
+                                placeholder="Enter any additional remarks or comments..." />
+                        </group>
+
+                        <!-- Hidden fields for computations -->
+                        <field name="has_pending_bills" invisible="1" />
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Search view for Petty Cash Requests -->
+        <record id="petty_cash_request_search_view" model="ir.ui.view">
+            <field name="name">petty.cash.request.search</field>
+            <field name="model">petty.cash.request</field>
+            <field name="arch" type="xml">
+                <search string="Search Petty Cash Requests">
+                    <field name="name" />
+                    <field name="request_by" />
+                    <field name="category" />
+                    <field name="state" />
+                    <separator />
+                    <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]" />
+                    <filter name="requested" string="Requested"
+                        domain="[('state', '=', 'requested')]" />
+                    <filter name="cash_issued" string="Cash Issued"
+                        domain="[('state', '=', 'cash_issued')]" />
+                    <filter name="completed" string="Completed"
+                        domain="[('state', '=', 'completed')]" />
+                    <filter name="cancelled" string="Cancelled"
+                        domain="[('state', '=', 'cancelled')]" />
+                    <separator />
+                    <group expand="0" string="Group By">
+                        <filter name="group_by_state" string="Status"
+                            context="{'group_by': 'state'}" />
+                        <filter name="group_by_category" string="Category"
+                            context="{'group_by': 'category'}" />
+                        <filter name="group_by_requester" string="Requested By"
+                            context="{'group_by': 'request_by'}" />
+                        <filter name="group_by_float" string="Float"
+                            context="{'group_by': 'float_request_id'}" />
                     </group>
+                </search>
+            </field>
+        </record>
 
-                    <!-- Approval Information -->
-                    <group string="Approvals" invisible="state != 'draft'">
-                        <group>
-                            <field name="isHodApproved" />
-                            <field name="hodApprovedBy" invisible="not isHodApproved" />
-                        </group>
-                        <group>
-                            <field name="isFloatManagerApproved" />
-                            <field name="floatManagerApprovedBy"
-                                invisible="not isFloatManagerApproved" />
-                        </group>
-                    </group>
-
-                    <!-- Cash Receipt Information -->
-                    <group string="Cash Receipt"
-                        invisible="state not in ['cash_issued', 'completed']">
-                        <group>
-                            <field name="cashReceivedByEmployee" />
-                            <field name="received_voucher" filename="received_voucher_filename"
-                                invisible="not cashReceivedByEmployee" />
-                            <field name="received_voucher_filename" invisible="1" />
-                        </group>
-                    </group>
-
-                    <!-- Remarks Section -->
-                    <group string="Additional Information">
-                        <field name="description" nolabel="1"
-                            placeholder="Enter any additional remarks or comments..." />
-                    </group>
-                </sheet>
-            </form>
-        </field>
-    </record>
-
-    <!-- Employee Portal Form View (simplified) -->
-    <record id="petty_cash_request_employee_form_view" model="ir.ui.view">
-        <field name="name">petty.cash.request.employee.form</field>
-        <field name="model">petty.cash.request</field>
-        <field name="priority">3</field>
-        <field name="arch" type="xml">
-            <form>
-                <header>
-                    <button name="action_submit" string="Submit Request" type="object"
-                        class="btn-primary"
-                        invisible="state != 'draft'" />
-                    <button name="action_cancel" string="Cancel Request" type="object"
-                        invisible="state not in ['draft', 'requested']" />
-                    <field name="state" widget="statusbar" />
-                </header>
-
-                <sheet>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="request_type" widget="selection"
-                                readonly="state != 'draft'" />
-                            <span> Request</span>
-                        </h1>
-                    </div>
-
-                    <group>
-                        <group>
-                            <field name="request_by" readonly="1" />
-                            <field name="float_request_id"
-                                domain="[('state', '=', 'approved')]"
-                                readonly="state != 'draft'" />
-                            <field name="request_date" readonly="1" />
-                            <field name="due_date" readonly="1" />
-                        </group>
-                        <group>
-                            <field name="category" readonly="state != 'draft'" />
-                            <field name="request_amount" widget="monetary"
-                                readonly="state != 'draft'" />
-                        </group>
-                    </group>
-
-                    <!-- IOU Details for Employee Portal -->
-                    <group string="IOU Details"
-                        invisible="request_type != 'iou'">
-                        <field name="reason_in_advance" string="Reason for Advance"
-                            placeholder="Please explain why you need this advance payment..."
-                            readonly="state != 'draft'" />
-                    </group>
-
-                    <!-- View Only Information -->
-                    <group string="Request Status" invisible="state in ['draft']">
-                        <group>
-                            <field name="isHodApproved" readonly="1" />
-                            <field name="hodApprovedBy" readonly="1"
-                                invisible="not isHodApproved" />
-                        </group>
-                        <group>
-                            <field name="isFloatManagerApproved" readonly="1" />
-                            <field name="floatManagerApprovedBy" readonly="1"
-                                invisible="not isFloatManagerApproved" />
-                        </group>
-                    </group>
-
-                    <group string="Description">
-                        <field name="description" nolabel="1"
-                            placeholder="Any additional comments..."
-                            readonly="state not in ['draft', 'requested']" />
-                    </group>
-                </sheet>
-            </form>
-        </field>
-    </record>
-
-    <!-- Updated List View -->
-    <record id="petty_cash_request_tree_view_updated" model="ir.ui.view">
-        <field name="model">petty.cash.request</field>
-        <field name="name">petty.cash.request.list.updated</field>
-        <field name="priority">2</field>
-        <field name="arch" type="xml">
-            <list string="Petty Cash Requests"
-                decoration-success="state == 'completed'"
-                decoration-info="state == 'cash_issued'"
-                decoration-warning="state == 'requested'"
-                decoration-muted="state == 'draft'"
-                decoration-danger="state == 'cancelled'">
-                <field name="request_date" />
-                <field name="name" string="Request No" />
-                <field name="float_request_id" string="Float Name" />
-                <field name="request_by" string="Requested By" />
-                <field name="category" string="Category" />
-                <field name="request_amount" string="Requested" widget="monetary"
-                    sum="Total Requested" />
-                <field name="hodApprovedBy" string="Approved By" />
-                <field name="state" string="Status" widget="badge" />
-            </list>
-        </field>
-    </record>
-
-    <!-- Action for Handler Portal -->
-    <record id="action_petty_cash_requests_handler" model="ir.actions.act_window">
-        <field name="name">Petty Cash Requests - Handler Portal</field>
-        <field name="res_model">petty.cash.request</field>
-        <field name="view_mode">list,form</field>
-        <field name="domain">[('request_type', '=', 'petty_cash')]</field>
-        <field name="context">{'default_request_type': 'petty_cash'}</field>
-    </record>
-
+        <!-- Action for Petty Cash Requests -->
+        <record id="action_petty_cash_requests" model="ir.actions.act_window">
+            <field name="name">Petty Cash Requests</field>
+            <field name="res_model">petty.cash.request</field>
+            <field name="view_mode">list,form</field>
+            <field name="view_id" ref="petty_cash_request_tree_view" />
+            <field name="search_view_id" ref="petty_cash_request_search_view" />
+            <field name="context">{
+                'default_request_type': 'petty_cash',
+                'default_state': 'draft'
+                }</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first petty cash request!
+                </p>
+                <p>
+                    Petty cash requests allow employees to request funds for small expenses.
+                    Submit your request, add anticipated bills, get approval, and receive cash.
+                </p>
+            </field>
+        </record>
+    </data>
 </odoo>

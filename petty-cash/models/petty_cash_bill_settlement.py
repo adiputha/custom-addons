@@ -1,6 +1,5 @@
 from odoo import models, fields, api, _
 from datetime import datetime
-
 from odoo.exceptions import ValidationError
 
 
@@ -66,13 +65,12 @@ class PettyCashBillSettlement(models.Model):
     action = fields.Selection([
         ('approve', 'Approve'),
         ('reject', 'Reject'),
-    ], string="Action",)
+    ], string="Action", help="Select action for bill approval/rejection")
     
     approved_by = fields.Many2one(
         'res.users',
         string="Approved By",
         tracking=True,
-        required=True,
     )
     
     approval_date = fields.Datetime(
@@ -100,11 +98,11 @@ class PettyCashBillSettlement(models.Model):
             if record.amount <= 0:
                 raise ValidationError(_("The amount must be positive."))
             
-            
     def action_approve(self):
+        """Approve bill settlement"""
         for record in self:
             if record.status != 'submitted':
-                raise ValidationError(_("Only submitted requests can be approved."))
+                raise ValidationError(_("Only submitted bills can be approved."))
             
             record.write({
                 'status': 'approved',
@@ -114,7 +112,7 @@ class PettyCashBillSettlement(models.Model):
             })
             
             record.message_post(
-                body=_("Settlement approved by %s on %s") % self.env.user.name,
+                body=_("Bill approved by %s") % self.env.user.name,
                 message_type='notification',
             )
             
@@ -122,7 +120,7 @@ class PettyCashBillSettlement(models.Model):
         """Reject bill settlement"""
         for record in self:
             if record.status != 'submitted':
-                raise ValidationError(_("Only submitted requests can be rejected."))
+                raise ValidationError(_("Only submitted bills can be rejected."))
             
             if not record.rejection_reason:
                 raise ValidationError(_("Please provide a reason for rejection."))
@@ -131,20 +129,19 @@ class PettyCashBillSettlement(models.Model):
                 'status': 'rejected',
                 'approved_by': self.env.user.id,
                 'approval_date': fields.Datetime.now(),
-                'rejection_reason': record.rejection_reason,
                 'action': False
             })
 
             record.message_post(
-                body=_("Settlement rejected by %s on %s") % (self.env.user.name, record.rejection_reason),
+                body=_("Bill rejected by %s. Reason: %s") % (self.env.user.name, record.rejection_reason),
                 message_type='notification',
             )
             
     def action_submit(self):
-        """Submit bill or approval"""
+        """Submit bill for approval"""
         for record in self:
             if record.status != 'draft':
-                raise ValidationError(_("Only draft requests can be submitted."))
+                raise ValidationError(_("Only draft bills can be submitted."))
             
             record.status = 'submitted'
             
@@ -153,7 +150,6 @@ class PettyCashBillSettlement(models.Model):
                 message_type='notification',
             )
             
-            
     def name_get(self):
         """Custom name display"""
         result = []
@@ -161,18 +157,11 @@ class PettyCashBillSettlement(models.Model):
             name = f"{record.category.name if record.category else 'No Category'} - Rs. {record.amount:,.2f}"
             if record.date:
                 name = f"{record.date} - {name}"
-                result.append((record.id, name))
+            result.append((record.id, name))
         return result
     
-    
-    @api.model
-    def create(self, vals):
-        """Auto-submit if parent request allows it"""
-        result = super().create(vals)
-        
-        # If created through employee portal, auto-submit
-        if self.env.context.get('auto_submit', False):
-            result.action_submit()
-            
-        return result
-            
+    # @api.model
+    # def create(self, vals):
+    #     """Override create to handle parent state"""
+    #     result = super().create(vals)
+    #     return result

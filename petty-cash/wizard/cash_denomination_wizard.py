@@ -748,6 +748,7 @@ class CashDenominationWizard(models.TransientModel):
         denomination_details = self._create_denomination_message()
 
         if self.request_id:
+            # For petty cash, change to cash_issued (after bills approved)
             self.request_id.state = "cash_issued"
             self.request_id.message_post(body=denomination_details)
         elif self.iou_request_id:

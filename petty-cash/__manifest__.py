@@ -33,7 +33,7 @@
         "views/iou_request_list_views.xml",
         
         "views/petty_cash_list_views.xml",
-        "views/petty_cash_bill_settlement_views.xml",
+        # "views/petty_cash_bill_settlement_views.xml",
         "views/petty_cash_category_views.xml",
         "views/petty_cash_request_views.xml",
         

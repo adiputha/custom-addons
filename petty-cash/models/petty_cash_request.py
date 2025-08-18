@@ -1,7 +1,6 @@
 from odoo import models, fields, api, _
 from datetime import datetime, timedelta
-from odoo.exceptions import UserError
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 import logging
@@ -40,6 +39,7 @@ class PettyCashRequest(models.Model):
         [
             ("draft", "Draft"),
             ("requested", "Requested"),
+            ("pending_bill_submission", "Pending Bill Submission"),
             ("cancelled", "Cancelled"),
             ("cash_issued", "Cash Issued"),
             ("completed", "Completed"),
@@ -207,21 +207,73 @@ class PettyCashRequest(models.Model):
             else:
                 record.settlement_date = False
                 
-                
+    @api.depends('bill_settlement_ids.status')
+    def _compute_has_pending_bills(self):
+        """Check if there are pending bills"""
+        for record in self:
+            pending_bills = record.bill_settlement_ids.filtered(lambda b: b.status in ['draft', 'submitted'])
+            record.has_pending_bills = bool(pending_bills)
+    
+    def action_submit_all_bills(self):
+        """Action to submit all bills"""
+        self.ensure_one()
+        
+        if self.state not in ['requested']:
+            raise UserError(_("Request must be in Requested state to submit bills."))
+
+        draft_bills = self.bill_settlement_ids.filtered(lambda b: b.status == 'draft')
+        if not draft_bills:
+            raise UserError(_("No draft bills found to submit."))
+        
+        total_bill_amount = sum(self.bill_settlement_ids.mapped('amount'))
+        if abs(total_bill_amount - self.request_amount) > 0.01:
+            raise UserError(_("Total bill amount does not match the request amount."))
+        
+        for bill in draft_bills:
+            if hasattr(bill, 'action_submit'):
+                bill.action_submit()
+            else:
+                bill.status = 'submitted'
+
+        self.message_post(
+            body=_("Bills submitted successfully. Total amount: Rs. %.2f") % total_bill_amount,
+            message_type='notification'
+        )
+        return True
+
     def action_approve_selected_bills(self):
         """Action to approve selected bills"""
         self.ensure_one()
+        
+        if self.state != 'requested':
+            raise UserError(_("Bills can only be approved for requests in requested state."))
+
         pending_bills = self.bill_settlement_ids.filtered(
-            lambda b: b.action == 'approve' and b.status in ['submitted', 'draft']
+            lambda b: b.action == 'approve' and b.status == 'submitted'
         )
         
         if not pending_bills:
             raise UserError(_("No bills selected for approval."))
         
         for bill in pending_bills:
-            if bill.status == 'draft':
-                bill.action_submit()
-            bill.action_approve()
+            if hasattr(bill, 'action_approve'):
+                bill.action_approve()
+            else:
+                bill.write({
+                    'status': 'approved',
+                    'approved_by': self.env.user.id,
+                    'approval_date': fields.Datetime.now(),
+                    'action': False,
+                })
+        
+        # Check if all bills are now approved and amounts match
+        all_bills_processed = not self.bill_settlement_ids.filtered(lambda b: b.status == 'submitted')
+        if all_bills_processed and abs(self.settlement_amount - self.request_amount) < 0.01:
+            # All bills approved and amounts match - ready for cash issuing
+            self.message_post(
+                body=_("All bills approved. Ready for cash issuing."),
+                message_type="notification",
+            )
         
         self.message_post(
             body=_("Approved %d bills totaling Rs. %.2f") % (
@@ -234,8 +286,12 @@ class PettyCashRequest(models.Model):
     def action_reject_selected_bills(self):
         """Action to reject selected bills"""
         self.ensure_one()
+        
+        if self.state != 'requested':
+            raise UserError(_("Bills can only be rejected for requests in requested state."))
+
         pending_bills = self.bill_settlement_ids.filtered(
-            lambda b: b.action == 'reject' and b.status in ['submitted', 'draft']
+            lambda b: b.action == 'reject' and b.status == 'submitted'
         )
         
         if not pending_bills:
@@ -244,13 +300,19 @@ class PettyCashRequest(models.Model):
         bills_without_remarks = pending_bills.filtered(lambda b: not b.rejection_reason)
         
         if bills_without_remarks:
-            raise UserError(_("Please provide a Reason for the bills you want to reject."))
+            raise UserError(_("Please provide a rejection reason for all bills you want to reject."))
 
         for bill in pending_bills:
-            if bill.status == 'draft':
-                bill.action_submit()
-            bill.action_reject()
-            
+            if hasattr(bill, 'action_reject'):
+                bill.action_reject()
+            else:
+                bill.write({
+                    'status': 'rejected',
+                    'rejected_by': self.env.user.id,
+                    'rejection_date': fields.Datetime.now(),
+                    'action': False,
+                })
+
         self.message_post(
             body=_("Rejected %d bills totaling Rs. %.2f") % (
                 len(pending_bills),
@@ -259,27 +321,21 @@ class PettyCashRequest(models.Model):
         )
         return True
     
-    def action_submit_all_bills(self):
-        """Action to submit all bills"""
+    def action_complete_petty_cash(self):
+        """Complete the petty cash request after cash receipt confirmation"""
         self.ensure_one()
         
-        draft_bills = self.bill_settlement_ids.filtered(lambda b: b.status == 'draft')
-        if not draft_bills:
-            raise UserError(_("No draft bills found to submit."))
+        if self.state != 'cash_issued':
+            raise UserError(_("Only cash issued requests can be completed."))
         
-        total_bill_amount = sum(self.bill_settlement_ids.mapped('amount'))
-        if abs(total_bill_amount - self.request_amount) > 0.01:
-            raise UserError(_("Total bill amount does not match the request amount."))
+        if not self.cashReceivedByEmployee:
+            raise UserError(_("Please confirm that employee has received the cash."))
+        
+        if not self.received_voucher:
+            raise UserError(_("Please attach the signed received voucher."))
 
-        for bill in draft_bills:
-            bill.action_submit()
-            
-        self.message_post(
-            body=_("Submitted %d bills totaling Rs. %.2f") % (
-                len(draft_bills),
-                sum(draft_bills.mapped('amount'))
-            )
-        )
+        self.state = "completed"
+        self.message_post(body=_("Petty cash request completed successfully."))
         return True
 
     @api.depends('bill_settlement_ids.status')
@@ -385,6 +441,16 @@ class PettyCashRequest(models.Model):
         """Issue cash - opens denomination popup"""
         self.ensure_one()
         if self.state == "requested":
+            
+            pending_bills = self.bill_settlement_ids.filtered(lambda b:b.status in ['submitted'])
+            if pending_bills:
+                raise UserError(_("Please approve or reject all bills before issuing cash."))
+            
+            if abs(self.settlement_amount - self.request_amount) > 0.01:
+                raise UserError(
+                    _("Settlement amount (Rs. %.2f) should equal request amount (Rs. %.2f)") % 
+                    (self.settlement_amount, self.request_amount)
+                )
             # Open denomination popup wizard
             return {
                 "name": "Cash Denomination - Petty Cash",
@@ -404,34 +470,6 @@ class PettyCashRequest(models.Model):
             }
         else:
             raise UserError(_("Cash can only be issued for requested petty cash"))
-
-    def action_complete_request(self):
-        """Complete the request after verifying cash receipt"""
-        self.ensure_one()
-        if self.state != "cash_issued":
-            raise UserError(_("Request must be in Cash Issued state to complete"))
-
-        if not self.cashReceivedByEmployee:
-            raise UserError(_("Please confirm that employee has received the cash"))
-
-        if not self.received_voucher:
-            raise UserError(_("Please attach the signed received voucher"))
-        
-        if self.bill_settlement_ids:
-            pending_bills = self.bill_settlement_ids.filtered(lambda b: b.status in ['draft', 'submitted'])
-            if pending_bills:
-                raise UserError(_("All bills must be approved or rejected before completing the request"))
-            
-           
-            if abs(self.settlement_amount - self.request_amount) > 0.01:
-                raise UserError(
-                    _("Settlement amount (Rs. %.2f) should equal request amount (Rs. %.2f)") % 
-                    (self.settlement_amount, self.request_amount)
-                )
-
-        self.state = "completed"
-        self.message_post(body=_("Request completed successfully"))
-        return True
 
     @api.constrains(
         "request_amount",

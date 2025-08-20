@@ -137,6 +137,12 @@ class PettyCashRequest(models.Model):
         tracking=True,
         help="Select the category for this petty cash request",
     )
+    
+    description = fields.Text(
+        string="Description",
+        required=True,
+        help="Provide a brief description of the petty cash request",
+    )
 
     # Cash Handling
     cashReceivedByEmployee = fields.Boolean(
@@ -153,8 +159,8 @@ class PettyCashRequest(models.Model):
 
     received_voucher_filename = fields.Char(string="Received Voucher Filename")
 
-    description = fields.Text(
-        string="Description",
+    remark = fields.Text(
+        string="Remark",
         help="Additional remarks or comments regarding the petty cash request",
     )
     
@@ -194,8 +200,8 @@ class PettyCashRequest(models.Model):
     def _compute_settlement_amount(self):
         """Compute the total settlement amount from approved bills"""
         for record in self:
-            approved_bills = record.bill_settlement_ids.filtered(lambda b: b.status == 'approved')
-            record.settlement_amount = sum(approved_bills.mapped('amount'))
+            valid_bills = record.bill_settlement_ids.filtered(lambda b: b.status != 'rejected')
+            record.settlement_amount = sum(valid_bills.mapped('amount'))
             
     @api.depends('bill_settlement_ids.date', 'bill_settlement_ids.status')
     def _compute_settlement_date(self):
@@ -217,8 +223,8 @@ class PettyCashRequest(models.Model):
     def action_submit_all_bills(self):
         """Action to submit all bills"""
         self.ensure_one()
-        
-        if self.state not in ['requested']:
+
+        if self.state != 'requested':
             raise UserError(_("Request must be in Requested state to submit bills."))
 
         draft_bills = self.bill_settlement_ids.filtered(lambda b: b.status == 'draft')
@@ -230,10 +236,7 @@ class PettyCashRequest(models.Model):
             raise UserError(_("Total bill amount does not match the request amount."))
         
         for bill in draft_bills:
-            if hasattr(bill, 'action_submit'):
-                bill.action_submit()
-            else:
-                bill.status = 'submitted'
+            bill.status = 'submitted'
 
         self.message_post(
             body=_("Bills submitted successfully. Total amount: Rs. %.2f") % total_bill_amount,
@@ -256,15 +259,12 @@ class PettyCashRequest(models.Model):
             raise UserError(_("No bills selected for approval."))
         
         for bill in pending_bills:
-            if hasattr(bill, 'action_approve'):
-                bill.action_approve()
-            else:
-                bill.write({
-                    'status': 'approved',
-                    'approved_by': self.env.user.id,
-                    'approval_date': fields.Datetime.now(),
-                    'action': False,
-                })
+            bill.write({
+                'status': 'approved',
+                'approved_by': self.env.user.id,
+                'approval_date': fields.Datetime.now(),
+                'action': False,
+            })
         
         # Check if all bills are now approved and amounts match
         all_bills_processed = not self.bill_settlement_ids.filtered(lambda b: b.status == 'submitted')
@@ -326,7 +326,7 @@ class PettyCashRequest(models.Model):
         self.ensure_one()
         
         if self.state != 'cash_issued':
-            raise UserError(_("Only cash issued requests can be completed."))
+            raise UserError(_("Only cash issued requests can be completed.")) 
         
         if not self.cashReceivedByEmployee:
             raise UserError(_("Please confirm that employee has received the cash."))
@@ -336,6 +336,28 @@ class PettyCashRequest(models.Model):
 
         self.state = "completed"
         self.message_post(body=_("Petty cash request completed successfully."))
+        return True
+    
+    def action_adjust_request_amount(self):
+        """Adjust the request amount based on the approved bills"""
+        self.ensure_one()
+        
+        if self.state != 'requested':
+            raise UserError(_("Request must be in Requested state to adjust amount."))
+        
+        approved_amount = sum(self.bill_settlement_ids.filtered(lambda b: b.status == 'approved').mapped('amount'))
+
+        if approved_amount <= 0:
+            raise UserError(_("No approved bills found to adjust the request amount."))
+        
+        old_amount = self.request_amount
+        self.request_amount = approved_amount
+        
+        self.message_post(
+            body=_("Request amount adjusted from Rs. %.2f to Rs. %.2f to match approved bills.") % (old_amount, approved_amount),
+            message_type='notification'
+        )
+        
         return True
 
     @api.depends('bill_settlement_ids.status')

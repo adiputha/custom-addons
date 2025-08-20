@@ -87,10 +87,7 @@ class PettyCashBillSettlement(models.Model):
     @api.onchange('action')
     def _onchange_action(self):
         """Update the status based on the action taken."""
-        if self.action == 'approve':
-            self.status = 'approved'
-        elif self.action == 'reject':
-            self.status = 'rejected'
+        pass
             
     @api.constrains('amount')
     def _check_amount(self):

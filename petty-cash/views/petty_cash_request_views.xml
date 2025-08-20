@@ -51,6 +51,12 @@
                             type="object"
                             class="btn-success"
                             invisible="state != 'cash_issued' or not cashReceivedByEmployee or not received_voucher" />
+                        <button name="action_adjust_request_amount"
+                            string="Adjust Request Amount"
+                            type="object"
+                            class="btn-warning"
+                            invisible="state != 'requested' or settlement_amount >= request_amount"
+                            confirm="This will reduce your request amount to match approved bills. Continue?" />
                         <field name="state" widget="statusbar"
                             statusbar_visible="draft,requested,cash_issued,completed" />
                     </header>
@@ -106,6 +112,7 @@
                                 <field name="request_date" />
                                 <field name="due_date" />
                                 <field name="category" options="{'no_create': True}" />
+                                <field name="description" placeholder="Provide a brief description of the petty cash request"/>
                             </group>
                             <group>
                                 <field name="request_amount" widget="monetary" />
@@ -149,7 +156,8 @@
                                 <strong>Instructions:</strong>
                                 <ul class="mb-0">
                                     <li>Add anticipated expense bills below.</li>
-                                    <li>Total amount must equal your request amount - Rs. <field name="request_amount" nolabel="1" readonly="1" /></li>
+                                    <li>Total amount must equal your request amount - Rs. <field
+                                            name="request_amount" nolabel="1" readonly="1" /></li>
                                     <li>Attach receipts/quotes for each anticipated expense.</li>
                                     <li>Click "Submit Bills" when ready for approval.</li>
                                 </ul>
@@ -161,12 +169,12 @@
                                     string="Approve Selected"
                                     type="object"
                                     class="btn-success"
-                                     />
+                                />
                                 <button name="action_reject_selected_bills"
                                     string="Reject Selected"
                                     type="object"
                                     class="btn-warning"
-                                    />
+                                />
                             </group>
 
                             <!-- Bill settlements embedded list -->
@@ -224,7 +232,7 @@
 
                         <!-- Additional Information -->
                         <group string="Additional Information">
-                            <field name="description" nolabel="1"
+                            <field name="remark" nolabel="1"
                                 placeholder="Enter any additional remarks or comments..." />
                         </group>
 

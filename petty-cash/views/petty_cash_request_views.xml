@@ -40,9 +40,9 @@
                             invisible="state != 'draft'" />
                         <button name="action_cancel" string="Cancel Request" type="object"
                             invisible="state not in ['draft', 'requested']" />
-                        <button name="action_submit_all_bills" string="Submit Bills" type="object"
+                        <!-- <button name="action_submit_all_bills" string="Submit Bills" type="object"
                             class="btn-primary"
-                            invisible="state != 'requested' or not bill_settlement_ids" />
+                            invisible="state != 'requested' or not bill_settlement_ids" /> -->
                         <button name="action_cash_issued" string="Issue Cash" type="object"
                             class="btn-primary"
                             invisible="state != 'requested'"
@@ -190,13 +190,13 @@
                                     <field name="amount" sum="Total Amount" widget="monetary" />
                                     <field name="attach_receipt" filename="receipt_filename" />
                                     <field name="action" widget="selection"
-                                        readonly="parent.state != 'requested'"
-                                        invisible="parent.state != 'requested'" />
+                                        readonly="parent.state != 'requested' or parent.state != 'submitted'"
+                                        invisible="parent.state != 'submitted'" />
                                     <field name="status" readonly="1" widget="badge" />
                                     <field name="description"
-                                        readonly="parent.state not in ['requested']" />
+                                        readonly="parent.state not in ['submitted   ']" />
                                     <field name="rejection_reason"
-                                        readonly="parent.state != 'requested'"
+                                        readonly="parent.state != 'submitted'"
                                         invisible="action != 'reject'" />
                                 </list>
                             </field>

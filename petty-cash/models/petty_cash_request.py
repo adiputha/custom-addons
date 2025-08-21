@@ -200,8 +200,8 @@ class PettyCashRequest(models.Model):
     def _compute_settlement_amount(self):
         """Compute the total settlement amount from approved bills"""
         for record in self:
-            valid_bills = record.bill_settlement_ids.filtered(lambda b: b.status != 'rejected')
-            record.settlement_amount = sum(valid_bills.mapped('amount'))
+            approved_bills = record.bill_settlement_ids.filtered(lambda b: b.status != 'approved')
+            record.settlement_amount = sum(approved_bills.mapped('amount'))
             
     @api.depends('bill_settlement_ids.date', 'bill_settlement_ids.status')
     def _compute_settlement_date(self):
@@ -217,32 +217,10 @@ class PettyCashRequest(models.Model):
     def _compute_has_pending_bills(self):
         """Check if there are pending bills"""
         for record in self:
-            pending_bills = record.bill_settlement_ids.filtered(lambda b: b.status in ['draft', 'submitted'])
+            pending_bills = record.bill_settlement_ids.filtered(lambda b: b.status == 'submitted')
             record.has_pending_bills = bool(pending_bills)
     
-    def action_submit_all_bills(self):
-        """Action to submit all bills"""
-        self.ensure_one()
 
-        if self.state != 'requested':
-            raise UserError(_("Request must be in Requested state to submit bills."))
-
-        draft_bills = self.bill_settlement_ids.filtered(lambda b: b.status == 'draft')
-        if not draft_bills:
-            raise UserError(_("No draft bills found to submit."))
-        
-        total_bill_amount = sum(self.bill_settlement_ids.mapped('amount'))
-        if abs(total_bill_amount - self.request_amount) > 0.01:
-            raise UserError(_("Total bill amount does not match the request amount."))
-        
-        for bill in draft_bills:
-            bill.status = 'submitted'
-
-        self.message_post(
-            body=_("Bills submitted successfully. Total amount: Rs. %.2f") % total_bill_amount,
-            message_type='notification'
-        )
-        return True
 
     def action_approve_selected_bills(self):
         """Action to approve selected bills"""
@@ -464,9 +442,17 @@ class PettyCashRequest(models.Model):
         self.ensure_one()
         if self.state == "requested":
             
-            pending_bills = self.bill_settlement_ids.filtered(lambda b:b.status in ['submitted'])
+            if not self.bill_settlement_ids:
+                raise UserError(_("Please submit bills before issuing cash."))
+            
+            #check for pending bills
+            pending_bills = self.bill_settlement_ids.filtered(lambda b:b.status == 'submitted')
             if pending_bills:
                 raise UserError(_("Please approve or reject all bills before issuing cash."))
+            
+            approved_bills = self.bill_settlement_ids.filtered(lambda b: b.status == 'approved')
+            if approved_bills:
+                raise UserError(_("No bills have been approved yet."))
             
             if abs(self.settlement_amount - self.request_amount) > 0.01:
                 raise UserError(

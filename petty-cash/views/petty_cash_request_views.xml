@@ -183,8 +183,7 @@
                                 <list editable="bottom"
                                     decoration-success="status == 'approved'"
                                     decoration-warning="status == 'submitted'"
-                                    decoration-danger="status == 'rejected'"
-                                    decoration-info="status == 'draft'">
+                                    decoration-danger="status == 'rejected'">
                                     <field name="date" />
                                     <field name="category" />
                                     <field name="amount" sum="Total Amount" widget="monetary" />
@@ -194,7 +193,7 @@
                                         invisible="parent.state != 'submitted'" />
                                     <field name="status" readonly="1" widget="badge" />
                                     <field name="description"
-                                        readonly="parent.state not in ['submitted   ']" />
+                                        readonly="parent.state not in ['submitted']" />
                                     <field name="rejection_reason"
                                         readonly="parent.state != 'submitted'"
                                         invisible="action != 'reject'" />

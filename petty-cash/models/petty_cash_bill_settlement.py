@@ -47,18 +47,18 @@ class PettyCashBillSettlement(models.Model):
 
     description = fields.Text(
         string="Description",
+        required=True,
         help="Additional remarks or notes regarding the settlement",
     )
     
     status = fields.Selection(
         [
-            ('draft', 'Draft'),
             ('submitted', 'Submitted'),
             ('approved', 'Approved'),
             ('rejected', 'Rejected'),
         ],
         string="Status",
-        default='draft',
+        default='submitted',
         tracking=True,
     )
     

@@ -151,7 +151,7 @@ class FloatRequest(models.Model):
         compute="_compute_current_denomination",
         store=True,
     )
-    
+
     reimbursement_ids = fields.One2many(
         "cash.reimbursement",
         "float_request_id",
@@ -246,51 +246,55 @@ class FloatRequest(models.Model):
                 body=_("Float request approved by %s") % self.env.user.name,
                 message_type="notification",
             )
-            
-            existing_denomination = self.env['float.denomination'].search([
-                ('float_request_id', '=', record.id),
-            ])
-            
+
+            existing_denomination = self.env["float.denomination"].search(
+                [
+                    ("float_request_id", "=", record.id),
+                ]
+            )
+
             if not existing_denomination:
-                 return {
-                'type': 'ir.actions.act_window',
-                'name': 'Setup Initial Denominations',
-                'res_model': 'initial.denomination.wizard',
-                'view_mode': 'form',
-                'target': 'new',
-                'context': {
-                    'default_float_request_id': record.id,
-                },
-            }
+                return {
+                    "type": "ir.actions.act_window",
+                    "name": "Setup Initial Denominations",
+                    "res_model": "initial.denomination.wizard",
+                    "view_mode": "form",
+                    "target": "new",
+                    "context": {
+                        "default_float_request_id": record.id,
+                    },
+                }
             else:
                 # Denomination already exists, just compute current
                 record._compute_current_denomination()
-                
+
     def action_setup_denominations(self):
         self.ensure_one()
-        
-        if self.state != 'approved':
-            raise UserError(_("Denominations can only be set up for approved float requests."))
-        
-        existing_denomination = self.env['float.denomination'].search([
-            ('float_request_id', '=', self.id)
-        ])
-        
+
+        if self.state != "approved":
+            raise UserError(
+                _("Denominations can only be set up for approved float requests.")
+            )
+
+        existing_denomination = self.env["float.denomination"].search(
+            [("float_request_id", "=", self.id)]
+        )
+
         if existing_denomination:
-            raise UserError(_("Denominations have already been set up for this float request."))
-        
+            raise UserError(
+                _("Denominations have already been set up for this float request.")
+            )
+
         return {
-            'type': 'ir.actions.act_window',
-            'name': 'Setup Initial Denominations',
-            'res_model': 'initial.denomination.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_float_request_id': self.id,
+            "type": "ir.actions.act_window",
+            "name": "Setup Initial Denominations",
+            "res_model": "initial.denomination.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_float_request_id": self.id,
             },
         }
-        
-        
 
     def action_view_denominations(self):
         """Open the denomination records for this float"""
@@ -370,20 +374,20 @@ class FloatRequest(models.Model):
                 message_type="notification",
             )
 
-    def action_approve(self):
-        """Approve the float request."""
-        for record in self:
-            if record.state != "requested":
-                raise UserError(
-                    _('Only requests in "Requested" state can be approved.')
-                )
-            record.state = "approved"
-            record.message_post(
-                body=_("Float request approved by %s") % self.env.user.name,
-                message_type="notification",
-            )
+    # def action_approve(self):
+    #     """Approve the float request."""
+    #     for record in self:
+    #         if record.state != "requested":
+    #             raise UserError(
+    #                 _('Only requests in "Requested" state can be approved.')
+    #             )
+    #         record.state = "approved"
+    #         record.message_post(
+    #             body=_("Float request approved by %s") % self.env.user.name,
+    #             message_type="notification",
+    #         )
 
-    def action_reject(self):
+    def reject(self):
         """Reject the float request."""
         for record in self:
             if record.state != "requested":
@@ -433,53 +437,57 @@ class FloatRequest(models.Model):
                 "default_float_request_id": self.id,
             },
         }
-        
-    @api.constrains('name', 'department_id')
+
+    @api.constrains("name", "department_id")
     def _check_name(self):
         for record in self:
             if not record.name or not record.name.strip():
-                raise ValidationError(_('Float name is required and cannot be empty.'))
-            
+                raise ValidationError(_("Float name is required and cannot be empty."))
+
             if len(record.name.strip()) < 3:
-                raise ValidationError(_('Float name must be at least 3 characters long.'))
-            
+                raise ValidationError(
+                    _("Float name must be at least 3 characters long.")
+                )
+
             if len(record.name) > 100:
-                raise ValidationError(_('Float name cannot exceed 100 characters.'))
-            
-            
+                raise ValidationError(_("Float name cannot exceed 100 characters."))
+
             if record.department_id:
-                
+
                 domain = [
-                    ('name', '=', record.name),
-                    ('department_id', '=', record.department_id.id),
-                    ('state', '!=', 'cancelled')
+                    ("name", "=", record.name),
+                    ("department_id", "=", record.department_id.id),
+                    ("state", "!=", "cancelled"),
                 ]
-                
-                
-                if hasattr(record, 'id') and record.id:
-                    domain.append(('id', '!=', record.id))
-                
-                duplicate = self.env['float.request'].search(domain, limit=1)
+
+                if hasattr(record, "id") and record.id:
+                    domain.append(("id", "!=", record.id))
+
+                duplicate = self.env["float.request"].search(domain, limit=1)
                 if duplicate:
                     raise ValidationError(
-                        _('A float with the name "%s" already exists for the %s department.') 
+                        _(
+                            'A float with the name "%s" already exists for the %s department.'
+                        )
                         % (record.name, record.department_id.name)
                     )
-                    
-    @api.constrains('float_manager_id')
+
+    @api.constrains("float_manager_id")
     def _check_float_manager(self):
         """Validate float manager"""
         for record in self:
             if not record.float_manager_id:
-                raise ValidationError(_('Float manager is required.'))
-                    
+                raise ValidationError(_("Float manager is required."))
+
     def action_request_reimbursement(self):
         """Open the reimbursement wizard for this float request."""
         self.ensure_one()
-        
-        if self.state != 'approved':
-            raise UserError(_("Reimbursement can only be requested for approved float requests."))
-        
+
+        if self.state != "approved":
+            raise UserError(
+                _("Reimbursement can only be requested for approved float requests.")
+            )
+
         return {
             "type": "ir.actions.act_window",
             "name": f"Request Reimbursement - {self.name}",
@@ -491,4 +499,4 @@ class FloatRequest(models.Model):
                 "default_handler_name": self.env.user.id,
                 "default_state": "draft",
             },
-        }        
+        }

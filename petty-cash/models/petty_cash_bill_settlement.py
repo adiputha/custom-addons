@@ -47,18 +47,18 @@ class PettyCashBillSettlement(models.Model):
 
     description = fields.Text(
         string="Description",
-        required=True,
         help="Additional remarks or notes regarding the settlement",
     )
     
     status = fields.Selection(
-        [
+        [   
+            ('draft', 'Draft'),
             ('submitted', 'Submitted'),
             ('approved', 'Approved'),
             ('rejected', 'Rejected'),
         ],
         string="Status",
-        default='submitted',
+        default='draft',
         tracking=True,
     )
     
@@ -79,6 +79,18 @@ class PettyCashBillSettlement(models.Model):
         tracking=True,
     )
     
+    rejected_by = fields.Many2one(
+        'res.users',
+        string="Rejected By",
+        tracking=True,
+    )
+
+    rejection_date = fields.Datetime(
+        string="Rejection Date",
+        readonly=True,
+        tracking=True,
+    )
+
     rejection_reason = fields.Text(
         string="Rejection Reason",
         help="Reason for rejection if the settlement is rejected",
@@ -134,27 +146,22 @@ class PettyCashBillSettlement(models.Model):
                 message_type='notification',
             )
             
-    def action_submit(self):
-        """Submit bill for approval"""
-        for record in self:
-            if record.status != 'draft':
-                raise ValidationError(_("Only draft bills can be submitted."))
-            
-            record.status = 'submitted'
-            
-            record.message_post(
-                body=_("Bill submitted for approval"),
-                message_type='notification',
-            )
-            
     def name_get(self):
         """Custom name display"""
         result = []
         for record in self:
-            name = f"{record.category.name if record.category else 'No Category'} - Rs. {record.amount:,.2f}"
-            if record.date:
-                name = f"{record.date} - {name}"
-            result.append((record.id, name))
+            status_icon = ""
+            if record.status == 'approved':
+                status_icon = "✅ "
+            elif record.status == 'rejected':
+                status_icon = "❌ "
+            elif record.status == 'draft':
+                status_icon = "📝 "
+            
+        name = f"{status_icon}{record.category.name if record.category else 'No Category'} - Rs. {record.amount:,.2f}"
+        if record.date:
+            name = f"{record.date} - {name}"
+        result.append((record.id, name))
         return result
     
     # @api.model

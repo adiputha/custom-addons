@@ -39,7 +39,6 @@ class PettyCashRequest(models.Model):
         [
             ("draft", "Draft"),
             ("requested", "Requested"),
-            ("pending_bill_submission", "Pending Bill Submission"),
             ("cancelled", "Cancelled"),
             ("cash_issued", "Cash Issued"),
             ("completed", "Completed"),
@@ -113,7 +112,7 @@ class PettyCashRequest(models.Model):
     )
 
     hodApprovedBy = fields.Many2one(
-        "res.users",
+        "res.users", 
         string="HOD Approved By",
         tracking=True,
     )
@@ -200,7 +199,7 @@ class PettyCashRequest(models.Model):
     def _compute_settlement_amount(self):
         """Compute the total settlement amount from approved bills"""
         for record in self:
-            approved_bills = record.bill_settlement_ids.filtered(lambda b: b.status != 'approved')
+            approved_bills = record.bill_settlement_ids.filtered(lambda b: b.status == 'approved')
             record.settlement_amount = sum(approved_bills.mapped('amount'))
             
     @api.depends('bill_settlement_ids.date', 'bill_settlement_ids.status')
@@ -230,7 +229,7 @@ class PettyCashRequest(models.Model):
             raise UserError(_("Bills can only be approved for requests in requested state."))
 
         pending_bills = self.bill_settlement_ids.filtered(
-            lambda b: b.action == 'approve' and b.status == 'submitted'
+            lambda b: b.action == 'approve' and b.status == 'draft'
         )
         
         if not pending_bills:
@@ -245,7 +244,7 @@ class PettyCashRequest(models.Model):
             })
         
         # Check if all bills are now approved and amounts match
-        all_bills_processed = not self.bill_settlement_ids.filtered(lambda b: b.status == 'submitted')
+        all_bills_processed = not self.bill_settlement_ids.filtered(lambda b: b.status == 'draft')
         if all_bills_processed and abs(self.settlement_amount - self.request_amount) < 0.01:
             # All bills approved and amounts match - ready for cash issuing
             self.message_post(
@@ -269,7 +268,7 @@ class PettyCashRequest(models.Model):
             raise UserError(_("Bills can only be rejected for requests in requested state."))
 
         pending_bills = self.bill_settlement_ids.filtered(
-            lambda b: b.action == 'reject' and b.status == 'submitted'
+            lambda b: b.action == 'reject' and b.status == 'draft'
         )
         
         if not pending_bills:
@@ -281,15 +280,12 @@ class PettyCashRequest(models.Model):
             raise UserError(_("Please provide a rejection reason for all bills you want to reject."))
 
         for bill in pending_bills:
-            if hasattr(bill, 'action_reject'):
-                bill.action_reject()
-            else:
-                bill.write({
-                    'status': 'rejected',
-                    'rejected_by': self.env.user.id,
-                    'rejection_date': fields.Datetime.now(),
-                    'action': False,
-                })
+            bill.write({
+                'status': 'rejected',
+                'rejected_by': self.env.user.id,
+                'rejection_date': fields.Datetime.now(),
+                'action': False,
+            })
 
         self.message_post(
             body=_("Rejected %d bills totaling Rs. %.2f") % (
@@ -329,14 +325,36 @@ class PettyCashRequest(models.Model):
             raise UserError(_("No approved bills found to adjust the request amount."))
         
         old_amount = self.request_amount
+        
+        if abs(approved_amount - old_amount) < 0.01:
+            raise UserError(_("Request amount is already equal to the approved bills amount. No adjustment needed."))
+           
         self.request_amount = approved_amount
         
-        self.message_post(
-            body=_("Request amount adjusted from Rs. %.2f to Rs. %.2f to match approved bills.") % (old_amount, approved_amount),
-            message_type='notification'
+        if approved_amount > old_amount:
+            message = _("Request amount increased from Rs. %.2f to Rs. %.2f to match approved bills total.\nIncrease: Rs. %.2f") % (
+            old_amount, approved_amount, (approved_amount - old_amount)
         )
+        else:
+            message = _("Request amount reduced from Rs. %.2f to Rs. %.2f to match approved bills total.\nReduction: Rs. %.2f") % (
+                old_amount, approved_amount, (old_amount - approved_amount)
+            )
+
+        self.message_post(
+        body=message,
+        message_type='notification'
+    )
         
-        return True
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'petty.cash.request',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'current',
+            'context': {
+                'form_view_ref': 'petty-cash.petty_cash_request_form_view'
+            }
+    }
 
     @api.depends('bill_settlement_ids.status')
     def _compute_pending_bills(self):
@@ -451,7 +469,7 @@ class PettyCashRequest(models.Model):
                 raise UserError(_("Please approve or reject all bills before issuing cash."))
             
             approved_bills = self.bill_settlement_ids.filtered(lambda b: b.status == 'approved')
-            if approved_bills:
+            if not approved_bills:
                 raise UserError(_("No bills have been approved yet."))
             
             if abs(self.settlement_amount - self.request_amount) > 0.01:

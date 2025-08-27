@@ -204,12 +204,13 @@
                                 options="{'no_create': True}" />
                             <field name="initial_amount"
                                 widget="monetary" />
-                            <field name="current_amount"
+                            <field name="remarks" placeholder="Enter remarks (optional)" />
+                            <!-- <field name="current_amount"
                                 widget="monetary"
                                 readonly="1" />
                             <field name="cash_in_hand"
                                 widget="monetary"
-                                readonly="1" />
+                                readonly="1" /> -->
                         </group>
                         <group>
                             <field name="float_manager_id"
@@ -219,10 +220,6 @@
                             <field name="exceed_limit" widget="monetary"
                                 invisible="not can_exceed" />
                         </group>
-                    </group>
-
-                    <group>
-                        <field name="remarks" placeholder="Enter remarks (optional)" />
                     </group>
 
                     <group string="Attachment" invisible="not attachment">
@@ -264,7 +261,7 @@
                             </div>
                         </div>
 
-                        <field name="current_denomination_id" readonly="1"
+                        <field name="name" readonly="1"
                             invisible="not current_denomination_id" />
                         <field name="denomination_ids" mode="list" readonly="1"
                             invisible="not current_denomination_id">

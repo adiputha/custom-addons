@@ -40,7 +40,8 @@
                             invisible="state != 'draft'" />
                         <button name="action_cancel" string="Cancel Request" type="object"
                             invisible="state not in ['draft', 'requested']" />
-                        <!-- <button name="action_submit_all_bills" string="Submit Bills" type="object"
+                        <!-- <button name="action_submit_all_bills" string="Submit Bills"
+                        type="object"
                             class="btn-primary"
                             invisible="state != 'requested' or not bill_settlement_ids" /> -->
                         <button name="action_cash_issued" string="Issue Cash" type="object"
@@ -55,7 +56,7 @@
                             string="Adjust Request Amount"
                             type="object"
                             class="btn-warning"
-                            invisible="state != 'requested' or settlement_amount >= request_amount"
+                            invisible="state != 'requested' or not bill_settlement_ids"
                             confirm="This will reduce your request amount to match approved bills. Continue?" />
                         <field name="state" widget="statusbar"
                             statusbar_visible="draft,requested,cash_issued,completed" />
@@ -112,7 +113,8 @@
                                 <field name="request_date" />
                                 <field name="due_date" />
                                 <field name="category" options="{'no_create': True}" />
-                                <field name="description" placeholder="Provide a brief description of the petty cash request"/>
+                                <field name="description"
+                                    placeholder="Provide a brief description of the petty cash request" />
                             </group>
                             <group>
                                 <field name="request_amount" widget="monetary" />
@@ -169,34 +171,35 @@
                                     string="Approve Selected"
                                     type="object"
                                     class="btn-success"
+                                    invisible="not bill_settlement_ids"
                                 />
                                 <button name="action_reject_selected_bills"
                                     string="Reject Selected"
                                     type="object"
                                     class="btn-warning"
+                                    invisible="not bill_settlement_ids"
                                 />
                             </group>
-
+                            <!-- man gmebek -->
                             <!-- Bill settlements embedded list -->
                             <field name="bill_settlement_ids"
                                 context="{'default_petty_cash_request_id': id}">
                                 <list editable="bottom"
                                     decoration-success="status == 'approved'"
-                                    decoration-warning="status == 'submitted'"
                                     decoration-danger="status == 'rejected'">
                                     <field name="date" />
                                     <field name="category" />
                                     <field name="amount" sum="Total Amount" widget="monetary" />
                                     <field name="attach_receipt" filename="receipt_filename" />
                                     <field name="action" widget="selection"
-                                        readonly="parent.state != 'requested' or parent.state != 'submitted'"
-                                        invisible="parent.state != 'submitted'" />
+                                        readonly="status != 'draft' or parent.state != 'requested'"
+                                        invisible="status != 'draft' or parent.state != 'requested'" />
                                     <field name="status" readonly="1" widget="badge" />
                                     <field name="description"
-                                        readonly="parent.state not in ['submitted']" />
+                                        readonly="status != 'draft'" />
                                     <field name="rejection_reason"
-                                        readonly="parent.state != 'submitted'"
-                                        invisible="action != 'reject'" />
+                                        readonly="status != 'draft' or parent.state != 'requested'"
+                                        invisible="action != 'reject' or status != 'draft'" />
                                 </list>
                             </field>
 
@@ -210,7 +213,7 @@
                                     </div>
                                 </group>
                                 <group>
-                                    <label for="settlement_amount" string="Bills Total" />
+                                    <label for="settlement_amount" string="Approved Bills Total" />
                                     <div>
                                         <field name="settlement_amount" widget="monetary"
                                             readonly="1"

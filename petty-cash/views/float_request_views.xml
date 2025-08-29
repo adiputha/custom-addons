@@ -5,9 +5,7 @@
         <field name="name">float.request.kanban</field>
         <field name="model">float.request</field>
         <field name="arch" type="xml">
-            <kanban class="o_kanban_horizontal_floats" create="false"
-                edit="false"
-                delete="false">
+            <kanban class="o_kanban_horizontal_floats" create="false" edit="false" delete="false">
                 <field name="id" />
                 <field name="name" />
                 <field name="department_id" />
@@ -22,65 +20,105 @@
                 <field name="date_created" />
                 <field name="state" />
                 <field name="current_denomination_id" />
+
+                <!-- Search Panel -->
+                <searchpanel>
+                    <field name="department_id" icon="fa-building" />
+                    <field name="state" icon="fa-flag" />
+                    <field name="float_manager_id" icon="fa-user" />
+                </searchpanel>
+
                 <templates>
                     <t t-name="kanban-box">
-                        <div class="oe_kanban_card  oe_kanban_global_click oe_kanban_no_click">
+                        <div class="oe_kanban_card oe_kanban_global_click"
+                            t-attf-style="border-left: 4px solid {{record.state.value == 'approved' ? '#28a745' : record.state.value == 'requested' ? '#ffc107' : '#6c757d'}};">
+                            <!-- Header -->
                             <div class="card-header">
                                 <div>
-                                    <strong>
-                                        <t t-esc="record.name.value" />
-                                    </strong>
-                                    <div style="font-size: 12px; color: #6c757d; margin-top: 2px;">
+                                    <strong t-esc="record.name.value" />
+                                    <div class="text-muted small">
+                                        <i class="fa fa-building me-1"></i>
                                         <t t-esc="record.department_id.value" />
                                     </div>
                                 </div>
-                                <span>
-                                    <strong>Rs. <t t-esc="record.initial_amount.value" /></strong>
-                                </span>
-                            </div>
-                            <div>
-                                <div class="float-card-buttons">
-                                    <button type="object"
-                                        name="action_view_petty_cash_requests"
-                                        class="btn btn-primary"
-                                        t-attf-context="{
-                                    'search_default_float_request_id': {{record.id.raw_value}},
-                                    'default_float_request_id': {{record.id.raw_value}},
-                                }">
-                                        Petty Cash Request
-                                    </button>
-                                    <button type="object" name="action_view_iou_requests"
-                                        class="btn btn-primary"
-                                        context="{
-                                    'search_default_float_request_id': id,
-                                    'default_float_request_id': id,
-                                    }">
-                                        IOU Request
-                                    </button>
-                                    <button class="btn btn-primary" type='object'
-                                        name='action_request_reimbursement'>Reimbursement</button>
-                                    <button class="btn btn-primary" type="object"
-                                        name="action_view_denominations">Denomination
-                                        Count</button>
+                                <div class="text-end">
+                                    <span class="badge"
+                                        t-attf-class="badge-{{record.state.value == 'approved' ? 'success' : record.state.value == 'requested' ? 'warning' : 'secondary'}}">
+                                        Rs. <t t-esc="record.initial_amount.value" />
+                                    </span>
+                                    <div class="small text-muted mt-1">
+                                        <t
+                                            t-esc="record.state.value.replace('_', ' ').charAt(0).toUpperCase() + record.state.value.replace('_', ' ').slice(1)" />
+                                    </div>
                                 </div>
+                            </div>
 
-                                <div class="float-card-summary">
-                                    <p>
-                                        <span>Cash in hand:</span>
-                                        <span>Rs. <t t-esc="record.cash_in_hand.value" /></span>
-                                    </p>
-                                    <p>
-                                        <span>IOU Amount:</span>
-                                        <span>Rs. <t t-esc="record.iou_amount.value" /></span>
-                                    </p>
-                                    <p>
-                                        <span>Total Requests:</span>
-                                        <span>
-                                            <t t-esc="record.total_requests.value" />
-                                        </span>
-                                    </p>
+                            <!-- Financial Summary -->
+                            <div class="float-card-summary">
+                                <p class="text-success fw-bold">
+                                    <span>Cash in Hand:</span>
+                                    <span>Rs. <t t-esc="record.cash_in_hand.value" /></span>
+                                </p>
+                                <p class="text-warning">
+                                    <span>IOU Amount:</span>
+                                    <span>Rs. <t t-esc="record.iou_amount.value" /></span>
+                                </p>
+                                <p class="text-primary fw-bold">
+                                    <span>Total Requests:</span>
+                                    <span>
+                                        <t t-esc="record.total_requests.value" />
+                                    </span>
+                                </p>
+                                <p>
+                                    <span><i class="fa fa-money text-info me-1"></i>Petty Cash:</span>
+                                    <span>
+                                        <t t-esc="record.total_petty_cash_requests.value" />
+                                    </span>
+                                </p>
+                                <p>
+                                    <span><i class="fa fa-handshake-o text-warning me-1"></i>IOU:</span>
+                                    <span>
+                                        <t t-esc="record.total_iou_requests.value" />
+                                    </span>
+                                </p>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="float-card-buttons">
+                                <button type="object" name="action_view_petty_cash_requests"
+                                    class="btn btn-outline-primary"
+                                    t-attf-context="{'search_default_float_request_id': {{record.id.raw_value}}, 'default_float_request_id': {{record.id.raw_value}}}">
+                                    <i class="fa fa-money me-1"></i>Petty Cash </button>
+                                <button type="object" name="action_view_iou_requests"
+                                    class="btn btn-outline-warning"
+                                    t-attf-context="{'search_default_float_request_id': {{record.id.raw_value}}, 'default_float_request_id': {{record.id.raw_value}}}">
+                                    <i class="fa fa-handshake-o me-1"></i>IOU </button>
+                                <button type="object" name="action_request_reimbursement"
+                                    class="btn btn-outline-success">
+                                    <i class="fa fa-refresh me-1"></i>Reimburse </button>
+                                <button type="object" name="action_view_denominations"
+                                    class="btn btn-outline-info">
+                                    <i class="fa fa-calculator me-1"></i>Denominations </button>
+                            </div>
+
+                            <!-- Footer Info -->
+                            <div class="mt-2 pt-2 border-top">
+                                <div class="d-flex justify-content-between text-muted small">
+                                    <span>
+                                        <i class="fa fa-user me-1"></i>
+                                        <t t-esc="record.float_manager_id.value" />
+                                    </span>
+                                    <span>
+                                        <i class="fa fa-calendar me-1"></i>
+                                        <t t-esc="record.date_created.value" />
+                                    </span>
                                 </div>
                             </div>
+
+                            <!-- Low Balance Alert -->
+                            <div class="alert alert-warning py-2 mt-2 mb-0 small"
+                                t-if="record.cash_in_hand.value &lt; 2000">
+                                <i class="fa fa-exclamation-triangle me-1"></i> Low balance warning </div>
                         </div>
                     </t>
                 </templates>
@@ -243,7 +281,7 @@
                         <group>
                             <field name="iou_amount" string="Pending IOUs" widget="monetary"
                                 readonly="1" />
-                            <field name="cash_in_hand" string="Available Cash" widget="monetary"
+                            <field name="cash_in_hand" string="Cash in Hand" widget="monetary"
                                 readonly="1" />
                         </group>
 
@@ -329,10 +367,7 @@
         <field name="name">Petty Cash Floats</field>
         <field name="res_model">float.request</field>
         <field name="view_mode">kanban,list,form</field>
-        <field name="context">{
-            'search_default_my_requests': 1,
-            'default_state': 'draft',
-            }</field>
+        <field name="context">{}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create your first float request!

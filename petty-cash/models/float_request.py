@@ -93,6 +93,19 @@ class FloatRequest(models.Model):
         tracking=True,
     )
 
+    allow_cross_department_request = fields.Boolean(
+        string="Allow Cross Department Request?",
+        default=False,
+        help="Allow employees to request from this float even if from different department",
+        tracking=True,
+    )
+
+    exceed_margin_percentage = fields.Float(
+        string="Exceed Margin %",
+        default=10.0,
+        help="Percentage margin allowed over the initial amount"
+    )
+
     petty_cash_request_id = fields.One2many(
         "petty.cash.request",
         "float_request_id",
@@ -157,6 +170,34 @@ class FloatRequest(models.Model):
         "float_request_id",
         string="Cash Reimbursements",
     )
+    
+    float_customization_ids = fields.One2many(
+        "float.customization",
+        "float_request_id",
+        string="Float Customizations",
+        help="Customization requests for this float"
+    )
+
+    has_pending_customization = fields.Boolean(
+        string="Has Pending Customization Requests?",
+        compute="_compute_customization_status",
+        help="Check if there are pending customizations for this float"
+    )
+    
+    @api.depends('state')
+    def _compute_state_display(self):
+        """Compute human-readable state display"""
+        for record in self:
+            record.state_display = record.state.replace('_', ' ').title()
+            
+    @api.depends('float_customization_ids.state')
+    def _compute_customization_status(self):
+        """Check if there are pending customizations"""
+        for record in self:
+            pending_customizations = record.float_customization_ids.filtered(
+                lambda r: r.state in ['draft', 'requested']
+            )
+            record.has_pending_customization = bool(pending_customizations)
 
     @api.depends("denomination_ids")
     def _compute_current_denomination(self):
@@ -267,6 +308,54 @@ class FloatRequest(models.Model):
             else:
                 # Denomination already exists, just compute current
                 record._compute_current_denomination()
+
+    def action_reject(self):
+        """Reject the float request."""
+        for record in self:
+            if record.state != "requested":
+                raise UserError(
+                    _('Only requests in "Requested" state can be rejected.')
+                )
+            record.state = "rejected"
+            record.message_post(
+                body=_("Float request rejected by %s") % self.env.user.name,
+                message_type="notification",
+            )
+            
+    def action_create_customization(self):
+        """Create new request"""
+        self.ensure_one()
+        
+        if self.state != 'approved':
+            raise UserError(_("Customizations can only be requested for approved float requests."))
+        
+        if self.has_pending_customization:
+            raise UserError(_("There are already pending customization requests for this float."))
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'name': f'Customize Float - {self.name}',
+            'res_model': 'float.customization', 
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_float_request_id': self.id
+            }
+        }
+
+    def action_view_customizations(self):
+        """Open the customization records for this float"""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": f"Customizations - {self.name}",
+            "res_model": "float.customization",
+            "view_mode": "list,form",
+            "domain": [("float_request_id", "=", self.id)],
+            "context": {
+                "default_float_request_id": self.id,
+            },
+        }
 
     def action_setup_denominations(self):
         self.ensure_one()

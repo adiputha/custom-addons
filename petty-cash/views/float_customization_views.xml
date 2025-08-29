@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
+    
     <record id="view_form_float_customization" model="ir.ui.view">
         <field name="name">float.customization.form</field>
         <field name="model">float.customization</field>
         <field name="arch" type="xml">
             <form string="Float Customization">
                 <header>
-                    <button name="action_submit" string="Submit for Approval"
+                    <button name="action_submit" string="Submit"
                         type="object" class="btn-primary"
                         invisible="state != 'draft'" />
-                    <button name="action_approve" string="Approve Changes"
+                    <button name="action_cancel" string="Cancel"
+                        type="object" class="btn-secondary"
+                        invisible="state not in ['draft', 'requested']" />
+                    <button name="action_approve" string="Approve"
                         type="object" class="btn-success"
                         invisible="state != 'requested'"
                         groups="account.group_account_manager" />
@@ -21,98 +25,118 @@
                         type="object" class="btn-secondary"
                         invisible="state != 'rejected'" />
                     <field name="state" widget="statusbar"
-                        statusbar_visible="draft,requested,approved" />
+                        statusbar_visible="draft,requested,approved,rejected,completed" />
                 </header>
 
                 <sheet>
+                    <!-- Title Section -->
                     <div class="oe_title">
-                        <h1>Float Customization Request</h1>
+                        <h1>
+                            <field name="current_float_name" readonly="1"
+                                placeholder="Customer Services float" />
+                        </h1>
                     </div>
 
-                    <!-- Current Float Information -->
-                    <group string="Current Float Information" name="current_info">
+                    <!-- Auto-filled Current Details -->
+                    <group>
                         <group>
-                            <field name="float_request_id"
+                            <field name="float_request_id" string="Float Name"
                                 options="{'no_create': True}"
                                 readonly="state != 'draft'" />
-                            <field name="current_float_name" />
-                            <field name="current_department_id" />
+                            <field name="current_department_id" string="Department" readonly="1" />
+                            <field name="current_initial_amount" string="Initial Float Amount"
+                                widget="monetary" readonly="1" />
                         </group>
                         <group>
-                            <field name="current_initial_amount" widget="monetary" />
-                            <field name="current_can_exceed" />
-                            <field name="current_float_manager_id" />
+                            <field name="current_can_exceed"
+                                string="Can exceed over the initial Amount" readonly="1" />
+                            <field name="current_float_manager_id" string="Float Manager"
+                                readonly="1" />
+                            <field name="new_float_manager_id" string="New Float Manager"
+                                invisible="not modify_float_manager"
+                                required="modify_float_manager"
+                                domain="[('share', '=', False)]" />
                         </group>
                     </group>
 
-                    <!-- Modifications Section -->
-                    <group string="Requested Modifications" name="modifications">
-                        <!-- Float Amount Modification -->
-                        <group string="Float Amount" col="2">
-                            <field name="modify_float_amount" />
-                            <field name="new_float_amount"
+                    <!-- Modification Checkboxes -->
+                    <group>
+                        <group>
+                            <!-- Modify Float Amount Section -->
+                            <field name="modify_float_amount" string="Modify the Float amount" />
+                            <field name="new_float_amount" string="New Float Amount"
                                 widget="monetary"
                                 invisible="not modify_float_amount"
                                 required="modify_float_amount" />
                         </group>
-
-                        <!-- Exceed Permission Modification -->
-                        <group string="Exceed Permission" col="2">
-                            <field name="modify_can_exceed" />
-                            <div invisible="not modify_can_exceed">
-                                <label for="new_can_exceed" string="New Can Exceed" />
-                                <field name="new_can_exceed" nolabel="1" />
-                                <br/>
-                                <label for="new_exceed_limit" string="New Exceed Limit"
-                                    invisible="not new_can_exceed"
-                                    required="new_can_exceed" />
-                                <field name="new_exceed_limit"
-                                    widget="monetary"
-                                    invisible="not new_can_exceed"
-                                    required="new_can_exceed"
-                                    nolabel="1" />
-                            </div>
-                        </group>
-
-                        <!-- Float Manager Modification -->
-                        <group string="Float Manager" col="2">
-                            <field name="modify_float_manager" />
-                            <field name="new_float_manager_id"
-                                invisible="not modify_float_manager"
-                                required="modify_float_manager"
-                                domain="[('share', '=', False)]"
-                                options="{'no_create': True}" />
-                        </group>
-                    </group>
-
-                    <!-- Reason and Additional Info -->
-                    <group string="Justification">
-                        <field name="reason_for_change"
-                            placeholder="Please provide a detailed explanation for why these changes are needed..."
-                            required="1" />
-                    </group>
-
-                    <group string="Additional Information">
-                        <field name="remarks"
-                            placeholder="Any additional comments or notes..." />
-                    </group>
-
-                    <!-- Approval Information (visible after approval) -->
-                    <group string="Approval Information"
-                        invisible="state not in ['approved', 'completed']">
                         <group>
-                            <field name="approved_by" />
-                            <field name="approval_date" />
+                            <!-- Can Exceed Section -->
+                            <field name="current_can_exceed"
+                                string="Can exceed over the initial Amount" readonly="1" />
+                            <field name="modify_can_exceed" string="Modify Can Exceed Permission" />
+                            <field name="new_can_exceed" string="New Can Exceed Setting"
+                                invisible="not modify_can_exceed" />
+                            <field name="new_exceed_limit" string="New Exceed Limit"
+                                widget="monetary"
+                                invisible="not modify_can_exceed or not new_can_exceed"
+                                required="modify_can_exceed and new_can_exceed" />
+                        </group>
+                    </group>
+
+                    <!-- Float Manager Section -->
+                    <group>
+                        <field name="modify_float_manager" string="Change Float Manager?" />
+                    </group>
+
+                    <!-- Remarks Section -->
+                    <group>
+                        <field name="reason_for_change" string="Reason for Change"
+                            placeholder="Enter reason for customization..."
+                            required="1"
+                            widget="text" />
+                    </group>
+
+                    <!-- Action Buttons -->
+                    <group>
+                        <button name="action_reset_form" string="Reset" type="object"
+                            class="btn-secondary" invisible="state != 'draft'" />
+                        <!-- <button name="action_print_voucher" string="Print Voucher" type="object"
+                            class="btn-info" invisible="state not in ['approved', 'completed']" /> -->
+                    </group>
+
+                    <!-- Additional Requirements -->
+                    <group string="System Configuration Options" invisible="state != 'draft'">
+                        <field name="modify_cross_department"
+                            string="Modify Cross-Department Access" />
+                        <field name="new_allow_cross_department"
+                            string="Allow Cross-Department Requests"
+                            invisible="not modify_cross_department" />
+                        <field name="modify_exceed_margin" string="Modify Exceed Margins" />
+                        <field name="new_exceed_margin_percentage" string="New Exceed Margin %"
+                            invisible="not modify_exceed_margin"
+                            required="modify_exceed_margin" />
+                    </group>
+
+                    <!-- Approval Information (auto-filled) -->
+                    <group string="Approval Information" invisible="state in ['draft', 'requested']">
+                        <group>
+                            <field name="approved_by" readonly="1" />
+                            <field name="approval_date" readonly="1" />
                         </group>
                         <group>
-                            <field name="request_date" />
+                            <field name="rejected_by" readonly="1" invisible="state != 'rejected'" />
+                            <field name="rejection_date" readonly="1"
+                                invisible="state != 'rejected'" />
+                            <field name="rejection_reason" readonly="1"
+                                invisible="state != 'rejected'" />
                         </group>
                     </group>
                 </sheet>
             </form>
         </field>
-
     </record>
+
+    <!-- Enhanced List View -->
     <record id="view_tree_float_customization" model="ir.ui.view">
         <field name="name">float.customization.list</field>
         <field name="model">float.customization</field>
@@ -121,20 +145,35 @@
                 decoration-success="state == 'approved'"
                 decoration-warning="state == 'requested'"
                 decoration-info="state == 'draft'"
-                decoration-danger="state == 'rejected'">
+                decoration-danger="state == 'rejected'"
+                decoration-muted="state == 'completed'">
                 <field name="request_date" />
                 <field name="float_request_id" />
                 <field name="current_department_id" />
-                <field name="modify_float_amount" widget="boolean_toggle" />
-                <field name="modify_can_exceed" widget="boolean_toggle" />
-                <field name="modify_float_manager" widget="boolean_toggle" />
+                <field name="modify_float_amount" string="Amt Change" widget="boolean_toggle" />
+                <field name="modify_can_exceed" string="Exceed Change" widget="boolean_toggle" />
+                <field name="modify_float_manager" string="Mgr Change" widget="boolean_toggle" />
+                <field name="priority" />
                 <field name="create_uid" string="Requested By" />
-                <field name="state" widget="badge" />
+                <field name="approved_by" />
+                <field name="state" widget="badge"
+                    decoration-success="state == 'approved'"
+                    decoration-warning="state == 'requested'"
+                    decoration-info="state == 'draft'"
+                    decoration-danger="state == 'rejected'" />
+                <!-- Actions column -->
+                <field name="id" invisible="1" />
+                <button name="action_submit" string="Submit" type="object"
+                    class="btn-primary btn-sm" invisible="state != 'draft'"
+                    icon="fa-paper-plane" />
+                <button name="action_approve" string="Approve" type="object"
+                    class="btn-success btn-sm" invisible="state != 'requested'"
+                    groups="account.group_account_manager" icon="fa-check" />
             </list>
         </field>
     </record>
 
-    <!-- Float Customization Search View -->
+    <!-- Enhanced Search View with SRS Filters -->
     <record id="view_search_float_customization" model="ir.ui.view">
         <field name="name">float.customization.search</field>
         <field name="model">float.customization</field>
@@ -143,8 +182,9 @@
                 <field name="float_request_id" />
                 <field name="current_department_id" />
                 <field name="create_uid" />
+                <field name="approved_by" />
 
-                <!-- Status Filters -->
+                <!-- Status Filters (SRS Requirement) -->
                 <filter string="Draft" name="draft"
                     domain="[('state', '=', 'draft')]" />
                 <filter string="Requested" name="requested"
@@ -153,6 +193,8 @@
                     domain="[('state', '=', 'approved')]" />
                 <filter string="Rejected" name="rejected"
                     domain="[('state', '=', 'rejected')]" />
+                <filter string="Completed" name="completed"
+                    domain="[('state', '=', 'completed')]" />
 
                 <separator />
                 <!-- Modification Type Filters -->
@@ -164,10 +206,23 @@
                     domain="[('modify_float_manager', '=', True)]" />
 
                 <separator />
+                <!-- Priority and Status Filters -->
+                <filter string="High Priority" name="high_priority"
+                    domain="[('priority', 'in', ['high', 'urgent'])]" />
                 <filter string="My Requests" name="my_requests"
                     domain="[('create_uid', '=', uid)]" />
                 <filter string="Pending Approval" name="pending_approval"
                     domain="[('state', '=', 'requested')]" />
+                <filter string="Need My Approval" name="need_approval"
+                    domain="[('state', '=', 'requested')]"
+                    groups="account.group_account_manager" />
+
+                <separator />
+                <!-- Date Filters -->
+                <filter string="This Week" name="this_week"
+                    domain="[('request_date', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]" />
+                <filter string="This Month" name="this_month"
+                    domain="[('request_date', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]" />
 
                 <group expand="0" string="Group By">
                     <filter string="Status" name="group_status"
@@ -176,19 +231,164 @@
                         context="{'group_by': 'float_request_id'}" />
                     <filter string="Department" name="group_department"
                         context="{'group_by': 'current_department_id'}" />
+                    <filter string="Priority" name="group_priority"
+                        context="{'group_by': 'priority'}" />
                     <filter string="Request Date" name="group_date"
                         context="{'group_by': 'request_date'}" />
+                    <filter string="Requested By" name="group_requester"
+                        context="{'group_by': 'create_uid'}" />
                 </group>
             </search>
         </field>
     </record>
 
-    <!-- Float Customization Action -->
+    <!-- Compliant Kanban View -->
+    <record id="view_kanban_float_customization" model="ir.ui.view">
+        <field name="name">float.customization.kanban</field>
+        <field name="model">float.customization</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" default_group_by="state">
+                <field name="id" />
+                <field name="float_request_id" />
+                <field name="current_department_id" />
+                <field name="current_float_name" />
+                <field name="priority" />
+                <field name="state" />
+                <field name="state_display" />
+                <field name="request_date" />
+                <field name="modify_float_amount" />
+                <field name="modify_can_exceed" />
+                <field name="modify_float_manager" />
+
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click"
+                            t-attf-style="border-left: 4px solid {{record.state.value == 'approved' ? '#28a745' : record.state.value == 'requested' ? '#ffc107' : record.state.value == 'rejected' ? '#dc3545' : '#6c757d'}};">
+
+                            <!-- Header -->
+                            <div class="o_kanban_record_top mb-2">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <t t-esc="record.current_float_name.value" />
+                                    </strong>
+                                    <br />
+                                    <small class="text-muted">
+                                        <t t-esc="record.current_department_id.value" />
+                                    </small>
+                                </div>
+                                <div class="o_kanban_record_top_right">
+                                    <!-- Priority Badge -->
+                                    <span class="badge me-1"
+                                        t-attf-class="badge-{{record.priority.value == 'urgent' ? 'danger' : record.priority.value == 'high' ? 'warning' : 'secondary'}}">
+                                        <t
+                                            t-esc="record.priority.value.charAt(0).toUpperCase() + record.priority.value.slice(1)" />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Content showing modifications -->
+                            <div class="o_kanban_record_body">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <strong>Requested Changes:</strong>
+                                        <ul class="list-unstyled mt-1">
+                                            <li t-if="record.modify_float_amount.value"
+                                                class="text-primary">
+                                                <i class="fa fa-money me-1"></i> Float Amount
+                                                Modification </li>
+                                            <li t-if="record.modify_can_exceed.value"
+                                                class="text-warning">
+                                                <i class="fa fa-arrow-up me-1"></i> Exceed
+                                                Permission Change </li>
+                                            <li t-if="record.modify_float_manager.value"
+                                                class="text-info">
+                                                <i class="fa fa-user me-1"></i> Manager Change </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer with date and status -->
+                            <div class="o_kanban_record_bottom mt-2">
+                                <div class="oe_kanban_bottom_left">
+                                    <small class="text-muted">
+                                        <i class="fa fa-calendar me-1"></i>
+                                        <t t-esc="record.request_date.value" />
+                                    </small>
+                                </div>
+                                <div class="oe_kanban_bottom_right">
+                                    <span class="badge fs-6 fw-bold"
+                                        t-attf-class="badge-{{record.state.value == 'approved' ? 'success' : record.state.value == 'requested' ? 'warning' : record.state.value == 'rejected' ? 'danger' : 'secondary'}}">
+                                        <t t-esc="record.state_display.value" />
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    
+    <record id="view_wizard_float_customization" model="ir.ui.view">
+        <field name="name">float.customization.wizard</field>
+        <field name="model">float.customization</field>
+        <field name="arch" type="xml">
+            <form string="Float Customization">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Customer Services float</h1>
+                        <p class="text-muted">Select the modifications you want to make</p>
+                    </div>
+
+                    
+                    <group>
+                        <group>
+                            <field name="float_request_id" string="Float Name"
+                                options="{'no_create': True}" />
+                            <field name="current_department_id" string="Department" readonly="1" />
+                            <field name="current_initial_amount" string="Initial Float Amount"
+                                widget="monetary" readonly="1" />
+                        </group>
+                        <group>
+                            <field name="current_can_exceed"
+                                string="Can exceed over the initial Amount" readonly="1" />
+                            <field name="current_float_manager_id" string="Float Manager"
+                                readonly="1" />
+                        </group>
+                    </group>
+
+                    <!-- Modification selections -->
+                    <group string="Select Modifications">
+                        <field name="modify_float_amount" string="Modify the Float amount" />
+                        <field name="modify_can_exceed" string="Modify Can Exceed Permission" />
+                        <field name="modify_float_manager" string="Change Float Manager" />
+                    </group>
+
+                    <!-- Quick reason -->
+                    <group>
+                        <field name="reason_for_change" string="Remarks"
+                            placeholder="Brief reason for this customization..."
+                            required="1" />
+                    </group>
+                </sheet>
+
+                <footer>
+                    <button name="action_create_detailed" string="Create Detailed Request"
+                        type="object" class="btn-primary" />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Actions -->
     <record id="action_float_customization" model="ir.actions.act_window">
-        <field name="name">Float Customization</field>
+        <field name="name">Float Customizations</field>
         <field name="res_model">float.customization</field>
-        <field name="view_mode">list,form</field>
-        <field name="context">{'default_state': 'draft'}</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="context">{}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 No float customization requests yet!
@@ -199,43 +399,6 @@
         </field>
     </record>
 
-    <record id="view_wizard_float_customization" model="ir.ui.view">
-        <field name="name">float.customization.wizard</field>
-        <field name="model">float.customization</field>
-        <field name="arch" type="xml">
-            <form string="Customize Float">
-                <sheet>
-                    <div class="oe_title">
-                        <h1>Customize Float</h1>
-                    </div>
-
-                    <group>
-                        <field name="float_request_id"
-                            options="{'no_create': True}" />
-                    </group>
-
-                    <group string="What would you like to modify?">
-                        <field name="modify_float_amount" />
-                        <field name="modify_can_exceed" />
-                        <field name="modify_float_manager" />
-                    </group>
-
-                    <group string="Reason">
-                        <field name="reason_for_change"
-                            placeholder="Briefly explain why this change is needed..." />
-                    </group>
-                </sheet>
-
-                <footer>
-                    <button name="action_submit" string="Create Customization Request"
-                        type="object" class="btn-primary" />
-                    <button string="Cancel" class="btn-secondary" special="cancel" />
-                </footer>
-            </form>
-        </field>
-    </record>
-
-    <!-- Action for Quick Customization Wizard -->
     <record id="action_wizard_float_customization" model="ir.actions.act_window">
         <field name="name">Customize Float</field>
         <field name="res_model">float.customization</field>

@@ -12,8 +12,10 @@
     },
     "data": [
         # security
+        "security/petty_cash_security.xml",
         "security/ir.model.access.csv",
         
+
         # data
         "data/sequence_data.xml",
 

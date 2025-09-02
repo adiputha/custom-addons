@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+   <data>
+        <record id="group_petty_cash_user" model="res.groups">
+            <field name="name">Petty Cash User</field>
+            <field name="category_id" ref="base.module_category_accounting"/>
+            <field name="comment">Basic petty cash user - can create and view own requests</field>
+        </record>
+
+        <!-- Petty cash handler group -->
+        <record id="group_petty_cash_handler" model="res.groups">
+            <field name="name">Petty Cash Handler</field>
+            <field name="category_id" ref="base.module_category_accounting"/>
+            <field name="implied_ids" eval="[(4, ref('group_petty_cash_user'))]"/>
+            <field name="comment">Petty cash handler - manages cash disbursement and denominations</field>
+        </record>
+
+        <record id="group_petty_cash_hod" model="res.groups">
+            <field name="name">HOD (Head of Department)</field>
+            <field name="category_id" ref="base.module_category_accounting"/>
+            <field name="implied_ids" eval="[(4, ref('group_petty_cash_user'))]"/>
+            <field name="comment">Head of Department - approves petty cash and IOU requests</field>
+        </record>
+
+        <record id="group_petty_cash_float_manager" model="res.groups">
+            <field name="name">Float Manager</field>
+            <field name="category_id" ref="base.module_category_accounting"/>
+            <field name="implied_ids" eval="[(4, ref('group_petty_cash_user'))]"/>
+            <field name="comment">Float manager - manages specific floats and approves requests</field>
+        </record>
+
+        <record id="group_petty_cash_manager" model="res.groups">
+            <field name="name">Petty Cash Manager</field>
+            <field name="category_id" ref="base.module_category_accounting"/>
+            <field name="implied_ids" eval="[(4, ref('group_petty_cash_handler')), (4, ref('group_petty_cash_float_manager'))]"/>
+            <field name="comment">Overall petty cash manager - full access to all petty cash functions</field>
+        </record>
+
+        <record id="group_petty_cash_accountant" model="res.groups">
+            <field name="name">Petty Cash Accountant</field>
+            <field name="category_id" ref="base.module_category_accounting"/>
+            <field name="implied_ids" eval="[(4, ref('group_petty_cash_manager'))]"/>
+            <field name="comment">Finance/Accountant - full access including float creation and reports</field>
+        </record>
+
+
+        <!-- Record Rules -->
+
+        <record id="petty_cash_request_user_rule" model="ir.rule">
+            <field name="name">Petty Cash: Users can see own requests</field>
+            <field name="model_id" ref="model_petty_cash_request"/>
+            <field name="domain_force">[('request_by', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <record id="petty_cash_request_handler_rule" model="ir.rule">
+            <field name="name">Petty Cash: Handlers can see all requests</field>
+            <field name="model_id" ref="model_petty_cash_request"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_handler'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <record id="petty_cash_request_hod_rule" model="ir.rule">
+            <field name="name">Petty Cash: HODs can see department requests</field>
+            <field name="model_id" ref="model_petty_cash_request"/>
+            <field name="domain_force">[('request_by.department_id.manager_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_hod'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <record id="petty_cash_request_float_manager_rule" model="ir.rule">
+            <field name="name">Petty Cash: Float managers can see their float requests</field>
+            <field name="model_id" ref="model_petty_cash_request"/>
+            <field name="domain_force">[('float_request_id.float_manager_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_float_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- IOU Request Rules -->
+
+        <record id="iou_request_user_rule" model="ir.rule">
+            <field name="name">IOU: Users can see own requests</field>
+            <field name="model_id" ref="model_petty_cash_iou_request"/>
+            <field name="domain_force">[('request_by', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <record id="iou_request_handler_rule" model="ir.rule">
+            <field name="name">IOU: Handlers can see all requests</field>
+            <field name="model_id" ref="model_petty_cash_iou_request"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_handler'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <record id="iou_request_hod_rule" model="ir.rule">
+            <field name="name">IOU: HODs can see department requests</field>
+            <field name="model_id" ref="model_petty_cash_iou_request"/>
+            <field name="domain_force">[('request_by.department_id.manager_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_hod'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <record id="iou_request_float_manager_rule" model="ir.rule">
+            <field name="name">IOU: Float managers can see their float requests</field>
+            <field name="model_id" ref="model_petty_cash_iou_request"/>
+            <field name="domain_force">[('float_request_id.float_manager_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_float_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+
+        <!-- Float Request -->
+
+        <record id="float_request_user_rule" model="ir.rule">
+            <field name="name">Float: Users can see approved floats</field>
+            <field name="model_id" ref="model_float_request"/>
+            <field name="domain_force">[('state', '=', 'approved')]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <record id="float_request_manager_rule" model="ir.rule">
+            <field name="name">Float: Managers can see managed floats</field>
+            <field name="model_id" ref="model_float_request"/>
+            <field name="domain_force">[('float_manager_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_float_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <record id="float_request_accountant_rule" model="ir.rule">
+            <field name="name">Float: Accountants can see all floats</field>
+            <field name="model_id" ref="model_float_request"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_accountant'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- Cash Reimbursement Rules -->
+        <record id="cash_reimbursement_handler_rule" model="ir.rule">
+            <field name="name">Reimbursement: Handlers can see their float reimbursements</field>
+            <field name="model_id" ref="model_cash_reimbursement"/>
+            <field name="domain_force">[('handler_name', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_handler'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <record id="cash_reimbursement_accountant_rule" model="ir.rule">
+            <field name="name">Reimbursement: Accountants can see all reimbursements</field>
+            <field name="model_id" ref="model_cash_reimbursement"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_accountant'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- Float Customization Rules -->
+        <record id="float_customization_manager_rule" model="ir.rule">
+            <field name="name">Customization: Managers can see their float customizations</field>
+            <field name="model_id" ref="model_float_customization"/>
+            <field name="domain_force">[('float_request_id.float_manager_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_float_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- Bill Settlement Rules -->
+        <record id="petty_cash_bill_settlement_user_rule" model="ir.rule">
+            <field name="name">Bill Settlement: Users can see own bills</field>
+            <field name="model_id" ref="model_petty_cash_bill_settlement"/>
+            <field name="domain_force">[('petty_cash_request_id.request_by', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <record id="iou_bill_settlement_user_rule" model="ir.rule">
+            <field name="name">IOU Bill Settlement: Users can see own bills</field>
+            <field name="model_id" ref="model_iou_bill_settlement"/>
+            <field name="domain_force">[('iou_request_id.request_by', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_petty_cash_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        </data>
+</odoo>

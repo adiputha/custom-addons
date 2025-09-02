@@ -1,46 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Main Menu -->
+        <!-- Main Menu - Admin and Petty Cash Users can see -->
         <menuitem id="petty_cash_menu_root"
             name="Petty Cash Management"
             sequence="10"
-            web_icon="petty_cash_management,static/description/icon.png" />
+            groups="petty-cash.group_petty_cash_admin,petty-cash.group_petty_cash_user" />
 
-        <!-- Float Management Menu (Parent Menu) -->
+        <!-- Float Management Menu -->
         <menuitem id="menu_float_management"
             name="Float Management"
             parent="petty_cash_menu_root"
-            sequence="10" />
+            sequence="10"
+            groups="petty-cash.group_petty_cash_admin,petty-cash.group_petty_cash_handler,petty-cash.group_petty_cash_manager,petty-cash.group_petty_cash_accountant" />
 
-        <!-- Float Requests under Float Management -->
+        <!-- Float Requests -->
         <menuitem id="menu_float_requests"
             name="Petty Cash Floats"
             parent="menu_float_management"
             action="action_float_request"
             sequence="10" />
 
-        <!-- Float Customization under Float Management -->
+        <!-- Float Customization -->
         <menuitem id="menu_float_customization"
             name="Float Customization"
             parent="menu_float_management"
             action="action_float_customization"
             sequence="20" />
 
-        <!-- Petty Cash Requests Menu (Parent Menu) -->
+        <!-- Petty Cash Requests Menu -->
         <menuitem id="menu_petty_cash_requests"
             name="Petty Cash Requests"
             parent="petty_cash_menu_root"
-            action="action_petty_cash_requests_list"
+            action="action_petty_cash_requests"
             sequence="20" />
 
-        <!-- IOU Request Menu (under Petty Cash Requests) -->
+        <!-- IOU Request Menu -->
         <menuitem id="menu_iou_requests"
             name="IOU Requests"
             parent="petty_cash_menu_root"
-            action="action_iou_requests_list"
+            action="action_iou_requests"
             sequence="30" />
 
-    </data>
+        <!-- Reimbursement Menu -->
+        <menuitem id="menu_reimbursement"
+            name="Reimbursement"
+            parent="petty_cash_menu_root"
+            action="action_cash_reimbursement"
+            sequence="40"
+            groups="petty-cash.group_petty_cash_admin,petty-cash.group_petty_cash_handler,petty-cash.group_petty_cash_manager,petty-cash.group_petty_cash_accountant" />
 
+        <!-- Configuration Submenu -->
+        <menuitem id="menu_petty_cash_config"
+            name="Configuration"
+            parent="petty_cash_menu_root"
+            sequence="100"
+            groups="petty-cash.group_petty_cash_admin,petty-cash.group_petty_cash_manager,petty-cash.group_petty_cash_accountant" />
+
+        <!-- Categories Menu -->
+        <menuitem id="menu_petty_cash_categories"
+            name="Categories"
+            parent="menu_petty_cash_config"
+            action="action_petty_cash_categories"
+            sequence="10" />
+
+        <!-- Float Denominations -->
+        <menuitem id="menu_float_denominations"
+            name="Float Denominations"
+            parent="menu_petty_cash_config"
+            action="action_float_denominations"
+            sequence="20" />
+
+    </data>
 </odoo>

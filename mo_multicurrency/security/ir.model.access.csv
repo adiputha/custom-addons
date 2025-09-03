@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_report_mo_overview_dual,access_report_mo_overview_dual,model_report_manufacturing_multicurrency_report_mo_overview_dual,base.group_user,1,0,0,0

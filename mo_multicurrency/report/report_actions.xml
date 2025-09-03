@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <report id="action_report_mo_overview_dual"
+    model="mrp.production"
+    report_type="qweb-html"
+    name="mo_multicurrency.action_report_mo_overview_dual"
+    string="Manufacturing Order Overview (LKR &amp; USD)"/>
+</odoo>

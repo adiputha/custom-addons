@@ -92,10 +92,12 @@
                                 widget="monetary" />
                             <field name="isHodApproved" string="Is HOD Approved" />
                             <field name="hodApprovedBy" string="HOD Approved By"
-                                invisible="not isHodApproved" />
+                                invisible="not isHodApproved"
+                                options="{'no_create': True, 'no_edit': True}" />
                             <field name="isFloatManagerApproved" string="Is Float Manager Approved" />
                             <field name="floatManagerApprovedBy" string="Float Manager Approved By"
-                                invisible="not isFloatManagerApproved" />
+                                invisible="not isFloatManagerApproved"
+                                options="{'no_create': True, 'no_edit': True}" />
                             <field name="cashReceivedByEmployee"
                                 invisible="state not in ['cash_issued', 'completed']" />
                             <field name="received_voucher"

@@ -293,33 +293,78 @@ class FloatCustomization(models.Model):
                           'Please resolve them before creating new ones.') % record.float_request_id.name)
 
     def action_submit(self):
-        """Submit request for approval"""
+        """Submit request for approval - Enhanced with proper group checks"""
         for record in self:
             if record.state != 'draft':
                 raise UserError(_('Only draft requests can be submitted.'))
+            
+            # Check if user can submit (should be Float Manager or higher)
+            can_submit = any([
+                self.env.user.has_group('petty-cash.group_petty_cash_float_manager'),
+                self.env.user.has_group('petty-cash.group_petty_cash_manager'),
+                self.env.user.has_group('petty-cash.group_petty_cash_accountant'),
+                self.env.user.has_group('base.group_system'),
+            ])
+            
+            if not can_submit:
+                raise UserError(_('You do not have permission to submit customization requests. Contact your Float Manager or System Administrator.'))
+            
             record.state = 'requested'
+            
+            # Client notification (more reliable than message_post)
             record.message_post(
                 body=_('Float customization request submitted for approval.'),
                 message_type='notification'
             )
-
+            
             record._send_approval_notification()
+            
+            # Return success notification
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Success'),
+                    'message': _('Float customization request submitted for approval.'),
+                    'type': 'success',
+                }
+            }
             
     def _send_approval_notification(self):
         """Send notification to managers for approval"""
         self.ensure_one()
         
-        # Get approvers (finance team, managers)
-        finance_group = self.env.ref('account.group_account_manager', raise_if_not_found=False) #this is the user groups part
-        if finance_group:
-            approvers = finance_group.users
-            for approver in approvers:
-                self.activity_schedule(
-                    'mail.mail_activity_data_todo',
-                    user_id=approver.id,
-                    summary=f'Float Customization Approval Required - {self.float_request_id.name}',
-                    note=f'Please review and approve the customization request for float: {self.float_request_id.name}'
-                )
+        # FIXED: Use your custom petty cash groups instead of account.group_account_manager
+        approver_groups = [
+            'petty-cash.group_petty_cash_accountant',  # Your accountant group
+            'petty-cash.group_petty_cash_manager',     # Your manager group
+        ]
+        
+        approvers = self.env['res.users']
+        for group_xmlid in approver_groups:
+            try:
+                group = self.env.ref(group_xmlid, raise_if_not_found=False)
+                if group and group.users:
+                    approvers |= group.users
+            except:
+                continue
+        
+        # Also include system administrators
+        try:
+            admin_group = self.env.ref('base.group_system', raise_if_not_found=False)
+            if admin_group and admin_group.users:
+                approvers |= admin_group.users
+        except:
+            pass
+        
+        # Create activities for all approvers
+        for approver in approvers:
+            self.activity_schedule(
+                'mail.mail_activity_data_todo',
+                user_id=approver.id,
+                summary=f'Float Customization Approval Required - {self.float_request_id.name}',
+                note=f'Please review and approve the customization request for float: {self.float_request_id.name}'
+            )
                 
     @api.model
     def get_system_configurations(self):
@@ -347,10 +392,17 @@ class FloatCustomization(models.Model):
             if record.state != 'requested':
                 raise UserError(_('Only requested customizations can be approved.'))
             
-            # Check if user has permission to approve
-            if not self.env.user.has_group('account.group_account_manager'):
-                raise UserError(_('You do not have permission to approve customizations.'))
+            # FIXED: Check for your custom petty cash groups instead of account manager
+            has_permission = any([
+                self.env.user.has_group('petty-cash.group_petty_cash_accountant'),
+                self.env.user.has_group('petty-cash.group_petty_cash_manager'),
+                self.env.user.has_group('base.group_system'),  # System admin
+            ])
             
+            if not has_permission:
+                raise UserError(_('You do not have permission to approve customizations. Required groups: Petty Cash Accountant, Petty Cash Manager, or System Administrator.'))
+            
+            # Rest of your approval logic stays the same...
             float_record = record.float_request_id
             changes = []
             
@@ -370,9 +422,10 @@ class FloatCustomization(models.Model):
                     changes.append(f'Exceed permission: {old_can_exceed} → {record.new_can_exceed}')
                
             if record.modify_float_manager:
-                old_manager = float_record.float_manager_id.name
+                old_manager = float_record.float_manager_id.name if float_record.float_manager_id else 'None'
                 float_record.float_manager_id = record.new_float_manager_id
-                changes.append(f'Float manager: {old_manager} → {record.new_float_manager_id.name}')
+                new_manager = record.new_float_manager_id.name if record.new_float_manager_id else 'None'
+                changes.append(f'Float manager: {old_manager} → {new_manager}')
             
             if record.modify_cross_department:
                 old_cross_dept = float_record.allow_cross_department_request
@@ -401,11 +454,6 @@ class FloatCustomization(models.Model):
             
             # Complete any pending activities
             record._complete_approval_activities()
-            
-            float_record.message_post(
-                body=_('Float customization approved: %s') % changes_summary,
-                message_type='notification'
-            )
 
 
     def _complete_approval_activities(self):

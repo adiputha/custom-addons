@@ -115,6 +115,7 @@ class PettyCashRequest(models.Model):
         "res.users", 
         string="HOD Approved By",
         tracking=True,
+        domain=lambda self: [('groups_id', 'in', self._get_hod_users())],
     )
 
     isFloatManagerApproved = fields.Boolean(
@@ -127,6 +128,7 @@ class PettyCashRequest(models.Model):
         "res.users",
         string="Float Manager Approved By",
         tracking=True,
+        domain=lambda self: [('groups_id', 'in', self._get_float_manager_users())],
     )
 
     category = fields.Many2one(
@@ -194,6 +196,40 @@ class PettyCashRequest(models.Model):
         string='Reason for Advance',
         help="Reason for requesting advance payment (for IOU requests)"
     )
+    
+    
+    @api.onchange('isHodApproved')
+    def _onchange_hod_approved(self):
+        """Filter HOD users and clear selection when unchecked"""
+        if not self.isHodApproved:
+            self.hodApprovedBy = False
+        
+    
+    @api.onchange('isFloatManagerApproved')
+    def _onchange_float_manager_approved(self):
+        """Filter Float Manager users and clear selection when unchecked"""
+        if not self.isFloatManagerApproved:
+            self.floatManagerApprovedBy = False
+    
+    def _get_hod_users(self):
+        """Get list of user IDs who have HOD role"""
+        try:
+            group = self.env.ref('petty-cash.group_petty_cash_hod', raise_if_not_found=False)
+            return [group.id] if group else []
+        except:
+            # Fallback - search by name
+            group = self.env['res.groups'].search([('name', '=', 'HOD (Head of Department)')], limit=1)
+            return [group.id] if group else []
+    
+    def _get_float_manager_users(self):
+        """Get list of user IDs who have Float Manager role"""
+        try:
+            group = self.env.ref('petty-cash.group_petty_cash_float_manager', raise_if_not_found=False)
+            return [group.id] if group else []
+        except:
+            # Fallback - search by name  
+            group = self.env['res.groups'].search([('name', '=', 'Float Manager')], limit=1)
+            return [group.id] if group else []
     
     @api.depends('bill_settlement_ids.amount', 'bill_settlement_ids.status')
     def _compute_settlement_amount(self):

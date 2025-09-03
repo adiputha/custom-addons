@@ -129,12 +129,14 @@
                         <group string="Approvals" invisible="state != 'draft'">
                             <group>
                                 <field name="isHodApproved" />
-                                <field name="hodApprovedBy" invisible="not isHodApproved" />
+                                <field name="hodApprovedBy" invisible="not isHodApproved"
+                                    options="{'no_create': True, 'no_edit': True}" />
                             </group>
                             <group>
                                 <field name="isFloatManagerApproved" />
                                 <field name="floatManagerApprovedBy"
-                                    invisible="not isFloatManagerApproved" />
+                                    invisible="not isFloatManagerApproved"
+                                    options="{'no_create': True, 'no_edit': True}" />
                             </group>
                         </group>
 

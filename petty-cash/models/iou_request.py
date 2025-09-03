@@ -98,6 +98,7 @@ class IouRequest(models.Model):
         "res.users",
         string="HOD Approved By",
         tracking=True,
+        domain=lambda self: [("groups_id", "in", self._get_hod_users())]
     )
 
     isFloatManagerApproved = fields.Boolean(
@@ -110,6 +111,7 @@ class IouRequest(models.Model):
         "res.users",
         string="Float Manager Approved By",
         tracking=True,
+        domain=lambda self: [("groups_id", "in", self._get_float_manager_users())]
     )
 
     cashReceivedByEmployee = fields.Boolean(
@@ -158,7 +160,39 @@ class IouRequest(models.Model):
         help="Select the float which you want to use for this petty cash request",
         tracking=True,
     )
-
+    
+    @api.onchange('isHodApproved')
+    def _onchange_isHodApproved(self):
+        if not self.isHodApproved:
+            self.hodApprovedBy = False
+            
+    @api.onchange('isFloatManagerApproved')
+    def _onchange_isFloatManagerApproved(self):
+        if not self.isFloatManagerApproved:
+            self.floatManagerApprovedBy = False
+            
+    def _get_hod_users(self):
+        """Get HOD users"""
+        try:
+            group = self.env.ref('petty-cash.group_petty_cash_hod', raise_if_not_found=False)
+            return [group.id] if group else []
+        except:
+            # Fallback - search by name
+            group = self.env['res.groups'].search([('name', '=', 'HOD (Head of Department)')], limit=1)
+            return [group.id] if group else []
+        
+    def _get_float_manager_users(self):
+        """Get Float managers"""
+        try:
+            group = self.env.ref('petty-cash.group_petty_cash_float_manager', raise_if_not_found=False)
+            return [group.id] if group else []
+        except:
+            # Fallback - search by name
+            group = self.env['res.groups'].search([('name', '=', 'Float Manager')], limit=1)
+            return [group.id] if group else []
+                
+        
+        
     @api.depends("bill_ids.amount", "bill_ids.status")
     def _compute_settlement_amount(self):
         """Compute the total settlement amount from related bills"""

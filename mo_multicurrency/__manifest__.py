@@ -15,7 +15,7 @@
         # 'security/ir.model.access.csv',
         'views/mrp_production_views.xml',
         
-        'report/report_actions.xml',
+        # 'report/report_actions.xml',
         'report/mrp_report_mo_overview_dual.xml',
     ],
     

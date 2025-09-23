@@ -30,7 +30,7 @@
 
                 <templates>
                     <t t-name="kanban-box">
-                        <div class="oe_kanban_card oe_kanban_global_click"
+                        <div class="oe_kanban_card oe_kanban_global_no_click"
                             t-attf-style="border-left: 4px solid {{record.state.value == 'approved' ? '#28a745' : record.state.value == 'requested' ? '#ffc107' : '#6c757d'}};">
                             <!-- Header -->
                             <div class="card-header">

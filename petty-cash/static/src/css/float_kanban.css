@@ -7,9 +7,9 @@
 }
 
 /* Disable global click */
-.oe_kanban_global_no_click {
-    pointer-events: none;
-}
+/*.oe_kanban_global_no_click {*/
+/*    pointer-events: none;*/
+/*}*/
 
 .float-card-buttons button {
     pointer-events: auto;
@@ -35,7 +35,7 @@
 }
 
 /* Card Header */
-.oe_kanban_global_click > .card-header {
+.oe_kanban_global_no_click > .card-header {
     background: #f8f9fa;
     color: #495057;
     padding: 16px;
@@ -46,6 +46,7 @@
     align-items: center;
     font-weight: 600;
     font-size: 15px;
+    pointer-events: none;
 }
 
 .card-header span {

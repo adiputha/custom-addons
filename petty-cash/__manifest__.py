@@ -7,8 +7,7 @@
     "author": "ewis",
     "depends": ["base", "account", "web", "mail", "hr", "portal"],
     "external_dependencies": {
-        "python": ["pytesseract", "Pillow", "pdf2image"],
-        "bin": ["tesseract"],
+        "python": ["Pillow", "pdf2image"],
     },
     "data": [
         # security

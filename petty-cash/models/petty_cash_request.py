@@ -62,13 +62,13 @@ class PettyCashRequest(models.Model):
         tracking=True,
     )
 
-    # employee_dept = fields.Many2one(
-    #     'hr.department',
-    #     string='Employee Department',
-    #     compute='_compute_employee_dept',
-    #     store=True,
-    #     readonly=True
-    # )
+    employee_dept = fields.Many2one(
+        'hr.department',
+        string='Employee Department',
+        compute='_compute_employee_dept',
+        store=True,
+        readonly=True
+    )
 
     request_date = fields.Datetime(
         string="Request Date", default=fields.Datetime.now, required=True, tracking=True
@@ -196,8 +196,18 @@ class PettyCashRequest(models.Model):
         string='Reason for Advance',
         help="Reason for requesting advance payment (for IOU requests)"
     )
-    
-    
+
+    @api.depends('request_by')
+    def _compute_employee_dept(self):
+        for record in self:
+            if record.request_by and record.request_by.employee_ids:
+                # Get the first employee record for the user
+                employee = record.request_by.employee_ids[0]
+                record.employee_dept = employee.department_id.id if employee.department_id else False
+            else:
+                record.employee_dept = False
+
+
     @api.onchange('isHodApproved')
     def _onchange_hod_approved(self):
         """Filter HOD users and clear selection when unchecked"""

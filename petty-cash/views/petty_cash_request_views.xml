@@ -107,6 +107,7 @@
                         <group string="Request Information">
                             <group>
                                 <field name="request_by" />
+                                <field name="employee_dept"/>
                                 <field name="float_request_id"
                                     domain="[('state', '=', 'approved')]"
                                     options="{'no_create': True}" />

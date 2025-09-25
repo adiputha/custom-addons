@@ -1,5 +1,5 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError , ValidationError
 
 import logging
 
@@ -336,98 +336,120 @@ class CashDenominationWizard(models.TransientModel):
 
     @api.model
     def default_get(self, fields_list):
-        """Set default values including available denominations"""
+        """Set default values with proper context handling"""
         defaults = super().default_get(fields_list)
 
-        _logger.info(f"Context in default_get: {self.env.context}")
-        _logger.info(f"Fields requested: {fields_list}")
-
         try:
+            # Handle different request types from context
             if self.env.context.get("default_request_id"):
                 request_id = self.env.context.get("default_request_id")
-                defaults["request_id"] = request_id
-
                 request = self.env["petty.cash.request"].browse(request_id)
                 if request.exists():
-                    defaults["request_number"] = request.name
-                    defaults["requested_amount"] = request.request_amount
-                    defaults["request_type"] = "petty_cash"
-
-                    # Load float and denomination data
+                    defaults.update({
+                        "request_id": request_id,
+                        "request_number": request.name,
+                        "requested_amount": request.request_amount,
+                        "request_type": "petty_cash"
+                    })
                     float_request = request.float_request_id
-                    if float_request:
-                        defaults["cash_in_hand"] = float_request.cash_in_hand
-
-                        # Load available denominations
-                        denom_data = self._get_denomination_data(float_request)
-                        defaults.update(denom_data)
-
-                        _logger.info(f"Loaded denomination data: {denom_data}")
 
             elif self.env.context.get("default_iou_request_id"):
                 iou_request_id = self.env.context.get("default_iou_request_id")
-                defaults["iou_request_id"] = iou_request_id
-
                 iou_request = self.env["petty.cash.iou.request"].browse(iou_request_id)
                 if iou_request.exists():
-                    defaults["request_number"] = iou_request.name
-                    defaults["requested_amount"] = iou_request.request_amount
-                    defaults["request_type"] = "iou"
-
-                    # Load float and denomination data
+                    defaults.update({
+                        "iou_request_id": iou_request_id,
+                        "request_number": iou_request.name,
+                        "requested_amount": iou_request.request_amount,
+                        "request_type": "iou"
+                    })
                     float_request = iou_request.float_request_id
-                    if float_request:
-                        defaults["cash_in_hand"] = float_request.cash_in_hand
-
-                        # Load available denominations
-                        denom_data = self._get_denomination_data(float_request)
-                        defaults.update(denom_data)
 
             elif self.env.context.get("default_reimbursement_id"):
                 reimbursement_id = self.env.context.get("default_reimbursement_id")
-                defaults["reimbursement_id"] = reimbursement_id
-
-                reimbursement = self.env["petty.cash.reimbursement"].browse(
-                    reimbursement_id
-                )
+                reimbursement = self.env["cash.reimbursement"].browse(reimbursement_id)
                 if reimbursement.exists():
-                    defaults["request_number"] = reimbursement.name
-                    defaults["requested_amount"] = reimbursement.required_amount
-                    defaults["request_type"] = "reimbursement"
-
-                    # Load float and denomination data
+                    defaults.update({
+                        "reimbursement_id": reimbursement_id,
+                        "request_number": reimbursement.name,
+                        "requested_amount": reimbursement.required_amount,
+                        "request_type": "reimbursement"
+                    })
                     float_request = reimbursement.float_request_id
-                    if float_request:
-                        defaults["cash_in_hand"] = float_request.cash_in_hand
 
-                        # Load available denominations
-                        denom_data = self._get_denomination_data(float_request)
-                        defaults.update(denom_data)
+            # Load current cash in hand and denomination data
+            if 'float_request' in locals() and float_request:
+                defaults["cash_in_hand"] = float_request.cash_in_hand
 
-                        _logger.info(f"Loaded denomination data: {denom_data}")
+                # Get latest denomination record
+                denom_record = self.env["float.denomination"].search(
+                    [("float_request_id", "=", float_request.id)],
+                    order="last_updated desc",
+                    limit=1,
+                )
+
+                if denom_record:
+                    # Load current available denominations
+                    defaults.update({
+                        "available_denom_5000_qty": denom_record.denom_5000_qty,
+                        "available_denom_1000_qty": denom_record.denom_1000_qty,
+                        "available_denom_500_qty": denom_record.denom_500_qty,
+                        "available_denom_100_qty": denom_record.denom_100_qty,
+                        "available_denom_50_qty": denom_record.denom_50_qty,
+                        "available_denom_20_qty": denom_record.denom_20_qty,
+                        "available_denom_10_qty": denom_record.denom_10_qty,
+                        "available_denom_5_qty": denom_record.denom_5_qty,
+                        "available_denom_2_qty": denom_record.denom_2_qty,
+                        "available_denom_1_qty": denom_record.denom_1_qty,
+                    })
 
         except Exception as e:
             _logger.error(f"Error in default_get: {e}")
-            # Set default values to prevent errors
-            defaults.update(
-                {
-                    "request_number": "",
-                    "requested_amount": 0.0,
-                    "cash_in_hand": 0.0,
-                    "denom_5000_available": 0,
-                    "denom_1000_available": 0,
-                    "denom_500_available": 0,
-                    "denom_100_available": 0,
-                    "denom_50_available": 0,
-                    "denom_20_available": 0,
-                    "denom_10_available": 0,
-                    "denom_5_available": 0,
-                    "denom_2_available": 0,
-                    "denom_1_available": 0,
-                }
-            )
+            # Set safe defaults
+            defaults.update({
+                "request_number": "",
+                "requested_amount": 0.0,
+                "cash_in_hand": 0.0,
+            })
 
         return defaults
+
+    @api.onchange('is_cash_balanced', 'selected_balance_amount', 'requested_amount')
+    def _onchange_balance_amount(self):
+        """Calculate selected amount when balance is involved"""
+        if self.is_cash_balanced and self.selected_balance_amount:
+            # When giving balance, total disbursed = requested + balance
+            self.selected_amount = self.requested_amount + self.selected_balance_amount
+        elif not self.is_cash_balanced:
+            # No balance - only give requested amount
+            self.selected_amount = self.requested_amount
+            self.selected_balance_amount = 0.0
+
+    @api.onchange('denom_5000_qty', 'denom_1000_qty', 'denom_500_qty', 'denom_100_qty',
+                  'denom_50_qty', 'denom_20_qty', 'denom_10_qty', 'denom_5_qty',
+                  'denom_2_qty', 'denom_1_qty')
+    def _onchange_denomination_quantities(self):
+        """Calculate selected amount based on denomination quantities"""
+        total = (
+                (self.denom_5000_qty or 0) * 5000 +
+                (self.denom_1000_qty or 0) * 1000 +
+                (self.denom_500_qty or 0) * 500 +
+                (self.denom_100_qty or 0) * 100 +
+                (self.denom_50_qty or 0) * 50 +
+                (self.denom_20_qty or 0) * 20 +
+                (self.denom_10_qty or 0) * 10 +
+                (self.denom_5_qty or 0) * 5 +
+                (self.denom_2_qty or 0) * 2 +
+                (self.denom_1_qty or 0) * 1
+        )
+
+        self.selected_amount = total
+
+        # Auto-calculate balance if needed
+        if self.is_cash_balanced and total > self.requested_amount:
+            self.selected_balance_amount = total - self.requested_amount
+        elif not self.is_cash_balanced:
+            self.selected_balance_amount = 0.0
 
     def _get_denomination_data(self, float_request):
         """Get denomination data from float request"""
@@ -706,14 +728,26 @@ class CashDenominationWizard(models.TransientModel):
                     _("Selected amount does not match the requested amount.")
                 )
 
+        operation = 'subtract'
+
+
         # Get float request
         float_request = None
         if self.request_id:
             float_request = self.request_id.float_request_id
+            record = self.request_id
+            record.state = "cash_issued"
         elif self.iou_request_id:
             float_request = self.iou_request_id.float_request_id
+            record = self.iou_request_id
+            record.state = "pending_bill_submission"
+            record.cashReceivedByEmployee = True
         elif self.reimbursement_id:
             float_request = self.reimbursement_id.float_request_id
+            record = self.reimbursement_id
+            operation == 'add'
+            record.received_amount = self.selected_amount
+            record.cash_received_by_handler = True
 
         if not float_request:
             raise UserError(_("No float request found."))
@@ -725,40 +759,37 @@ class CashDenominationWizard(models.TransientModel):
             limit=1,
         )
 
-        if current_denom:
-            denomination_used = {
-                "denom_5000_qty": self.denom_5000_qty,
-                "denom_1000_qty": self.denom_1000_qty,
-                "denom_500_qty": self.denom_500_qty,
-                "denom_100_qty": self.denom_100_qty,
-                "denom_50_qty": self.denom_50_qty,
-                "denom_20_qty": self.denom_20_qty,
-                "denom_10_qty": self.denom_10_qty,
-                "denom_5_qty": self.denom_5_qty,
-                "denom_2_qty": self.denom_2_qty,
-                "denom_1_qty": self.denom_1_qty,
-            }
+        if not current_denom:
+            raise UserError(_("No float request found."))
 
-            if self.reimbursement_id:
-                current_denom.add_denomination_from_reimbursement(denomination_used)
-            else:
-                current_denom.update_denomination_after_reimbursement(denomination_used)
+        denomination_changes = {
+            "denom_5000_qty": self.denom_5000_qty,
+            "denom_1000_qty": self.denom_1000_qty,
+            "denom_500_qty": self.denom_500_qty,
+            "denom_100_qty": self.denom_100_qty,
+            "denom_50_qty": self.denom_50_qty,
+            "denom_20_qty": self.denom_20_qty,
+            "denom_10_qty": self.denom_10_qty,
+            "denom_5_qty": self.denom_5_qty,
+            "denom_2_qty": self.denom_2_qty,
+            "denom_1_qty": self.denom_1_qty,
+        }
 
-        # Create message and update request state
-        denomination_details = self._create_denomination_message()
+        try:
+            current_denom.update_denomination(denomination_changes, operation)
+        except ValidationError as e:
+            raise UserError(str(e))
 
-        if self.request_id:
-            # For petty cash, change to cash_issued (after bills approved)
-            self.request_id.state = "cash_issued"
-            self.request_id.message_post(body=denomination_details)
-        elif self.iou_request_id:
-            self.iou_request_id.state = "pending_bill_submission"
-            self.iou_request_id.cashReceivedByEmployee = True
-            self.iou_request_id.message_post(body=denomination_details)
-        elif self.reimbursement_id:
-            self.reimbursement_id.received_amount = self.selected_amount
-            self.reimbursement_id.cash_received_by_handler = True
-            self.reimbursement_id.message_post(body=denomination_details)
+            # Update cash in hand for the float
+        if operation == 'subtract':
+            float_request.cash_in_hand -= self.selected_amount
+        else:
+            float_request.cash_in_hand += self.selected_amount
+
+            # Create denomination message
+
+        denomination_details = self._create_denomination_message(operation)
+        record.message_post(body=denomination_details)
 
         return {
             "type": "ir.actions.act_window_close",

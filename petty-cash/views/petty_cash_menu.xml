@@ -32,14 +32,14 @@
         <menuitem id="menu_petty_cash_requests"
             name="Petty Cash Requests"
             parent="petty_cash_menu_root"
-            action="action_petty_cash_requests"
+            action="action_petty_cash_requests_list"
             sequence="20" />
 
         <!-- IOU Request Menu -->
         <menuitem id="menu_iou_requests"
             name="IOU Requests"
             parent="petty_cash_menu_root"
-            action="action_iou_requests"
+            action="action_petty_cash_requests_list"
             sequence="30" />
 
         <!-- Reimbursement Menu -->

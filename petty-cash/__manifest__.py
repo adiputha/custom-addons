@@ -25,7 +25,8 @@
         
         # views
         "views/cash_reimbursement_views.xml",
-        
+
+        "views/float_customization_reject_wizard_views.xml",
         "views/float_customization_views.xml",
         "views/float_request_views.xml",
         "views/float_denomination_views.xml",

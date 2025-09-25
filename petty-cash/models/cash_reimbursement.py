@@ -234,8 +234,6 @@ class CashReimbursement(models.Model):
             if not record.received_amount:
                 raise UserError(_("Please enter the Received amount."))
 
-            record._update_float_denomination()
-
             record.state = "completed"
             record.message_post(
                 body=_("Reimbursement request completed."),
@@ -343,7 +341,7 @@ class CashReimbursement(models.Model):
             return self.env['petty.cash.request']
         
         try:
-            from_datetime = f"{self.report_from_date} 00:00:00",
+            from_datetime = f"{self.report_from_date} 00:00:00"
             to_datetime = f"{self.report_to_date} 23:59:59"
 
             valid_states = ['completed', 'cash_issued']

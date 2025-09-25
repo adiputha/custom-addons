@@ -307,7 +307,7 @@ class FloatCustomization(models.Model):
             ])
             
             if not can_submit:
-                raise UserError(_('You do not have permission to submit customization requests. Contact your Float Manager or System Administrator.'))
+                raise UserError(_('You do not have permission to submit customization requests.'))
             
             record.state = 'requested'
             
@@ -402,7 +402,7 @@ class FloatCustomization(models.Model):
             if not has_permission:
                 raise UserError(_('You do not have permission to approve customizations. Required groups: Petty Cash Accountant, Petty Cash Manager, or System Administrator.'))
             
-            # Rest of your approval logic stays the same...
+
             float_record = record.float_request_id
             changes = []
             
@@ -634,5 +634,19 @@ class FloatCustomizationRejectWizard(models.TransientModel):
     def action_reject(self):
         """Perform the rejection"""
         self.ensure_one()
+        if not self.customization_id:
+            raise UserError(_('No customization record found.'))
+
+        # Call the internal rejection method
         self.customization_id._do_reject(self.rejection_reason)
-        return {'type': 'ir.actions.act_window_close'}
+
+        # Return success notification and close
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Rejected'),
+                'message': _('Float customization request has been rejected.'),
+                'type': 'success',
+            }
+        }

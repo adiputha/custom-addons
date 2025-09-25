@@ -106,6 +106,21 @@ class FloatRequest(models.Model):
         help="Percentage margin allowed over the initial amount"
     )
 
+    max_single_disbursement = fields.Float(
+        string="Maximum Single Disbursement",
+        default=5000.0,
+        help="Maximum amount that can be disbursed in a single request",
+        tracking=True,
+    )
+
+    can_exceed_single_limit = fields.Boolean(
+        string="Can Exceed Single Disbursement Limit?",
+        default=False,
+        help="Allow individual requests to exceed the single disbursement limit",
+        tracking=True,
+    )
+
+
     petty_cash_request_id = fields.One2many(
         "petty.cash.request",
         "float_request_id",
@@ -183,6 +198,21 @@ class FloatRequest(models.Model):
         compute="_compute_customization_status",
         help="Check if there are pending customizations for this float"
     )
+
+    total_disbursed = fields.Float(
+        string="Total Disbursed",
+        compute="_compute_disbursement_totals",
+        store=True,
+        help="Total amount disbursed from this float"
+    )
+
+    available_for_disbursement = fields.Float(
+        string="Available for Disbursement",
+        compute="_compute_disbursement_totals",
+        store=True,
+        help="Amount available for new disbursements (considering exceed limits)"
+    )
+
     
     @api.depends('state')
     def _compute_state_display(self):
@@ -275,6 +305,28 @@ class FloatRequest(models.Model):
     #         "denom_1_qty": denom_1,
     #     }
 
+    @api.depends("iou_request_id", "petty_cash_request_id")
+    def _compute_request_totals(self):
+        for record in self:
+            record.total_iou_requests = len(record.iou_request_id)
+            record.total_petty_cash_requests = len(record.petty_cash_request_id)
+            record.total_requests = (
+                record.total_iou_requests + record.total_petty_cash_requests
+            )
+
+    @api.depends(
+        "initial_amount",
+        "petty_cash_request_id.request_amount",
+        "petty_cash_request_id.state",
+    )
+    def _compute_current_amount(self):
+        for record in self:
+            completed_requests = record.petty_cash_request_id.filtered(
+                lambda r: r.state in ["approved", "completed", "cash_issued"]
+            )
+            disbursed_amount = sum(completed_requests.mapped("request_amount"))
+            record.current_amount = record.initial_amount - disbursed_amount
+
     def action_approve(self):
         """Approve the float request."""
         for record in self:
@@ -289,9 +341,7 @@ class FloatRequest(models.Model):
             )
 
             existing_denomination = self.env["float.denomination"].search(
-                [
-                    ("float_request_id", "=", record.id),
-                ]
+                [("float_request_id", "=", record.id)]
             )
 
             if not existing_denomination:
@@ -306,7 +356,6 @@ class FloatRequest(models.Model):
                     },
                 }
             else:
-                # Denomination already exists, just compute current
                 record._compute_current_denomination()
 
     def action_reject(self):
@@ -440,6 +489,95 @@ class FloatRequest(models.Model):
             )
             record.iou_amount = sum(pending_ious.mapped("request_amount"))
 
+    @api.depends(
+        "petty_cash_request_id.request_amount",
+        "petty_cash_request_id.state",
+        "iou_request_id.request_amount",
+        "iou_request_id.state",
+        "initial_amount",
+        "can_exceed",
+        "exceed_limit"
+    )
+    def _compute_disbursement_totals(self):
+        """Compute total disbursed and available amounts with exceed logic"""
+        for record in self:
+            # Calculate total disbursed (completed + pending)
+            completed_petty_cash = record.petty_cash_request_id.filtered(
+                lambda r: r.state in ["approved", "completed", "cash_issued"]
+            )
+            completed_ious = record.iou_request_id.filtered(
+                lambda r: r.state in ["pending_bill_submission", "cash_issued", "completed"]
+            )
+
+            total_petty_cash = sum(completed_petty_cash.mapped("request_amount"))
+            total_ious = sum(completed_ious.mapped("request_amount"))
+            record.total_disbursed = total_petty_cash + total_ious
+
+            # Calculate available for disbursement
+            if record.can_exceed and record.exceed_limit > 0:
+                # Can exceed: use exceed limit
+                max_available = record.exceed_limit
+            else:
+                # Cannot exceed: use initial amount only
+                max_available = record.initial_amount
+
+            record.available_for_disbursement = max(0, max_available - record.total_disbursed)
+
+    @api.onchange('department_id')
+    def _onchange_department_id(self):
+        """Filter float managers based on selected department"""
+        if self.department_id:
+            # Clear the current selection
+            self.float_manager_id = False
+
+            # Get users who are managers of this department or have float manager rights
+            domain = [
+                '|',
+                ('department_ids', 'in', [self.department_id.id]),
+                ('groups_id', 'in', self.env.ref('petty-cash.group_petty_cash_float_manager').ids)
+            ]
+
+            return {
+                'domain': {
+                    'float_manager_id': domain
+                }
+            }
+        else:
+            return {
+                'domain': {
+                    'float_manager_id': []
+                }
+            }
+
+    def check_disbursement_limit(self, amount):
+        """Check if a disbursement amount is allowed"""
+        self.ensure_one()
+
+        # Check single disbursement limit
+        if not self.can_exceed_single_limit and amount > self.max_single_disbursement:
+            raise UserError(
+                _("Request amount (Rs. %.2f) exceeds the maximum single disbursement limit (Rs. %.2f) for this float.")
+                % (amount, self.max_single_disbursement)
+            )
+
+        # Check total available amount
+        if amount > self.available_for_disbursement:
+            if self.can_exceed:
+                raise UserError(
+                    _("Request amount (Rs. %.2f) exceeds available disbursement limit (Rs. %.2f). "
+                      "Total limit with exceed permission: Rs. %.2f")
+                    % (amount, self.available_for_disbursement, self.exceed_limit)
+                )
+            else:
+                raise UserError(
+                    _("Request amount (Rs. %.2f) exceeds available balance (Rs. %.2f). "
+                      "This float cannot exceed its initial amount.")
+                    % (amount, self.available_for_disbursement)
+                )
+
+        return True
+
+
     @api.constrains("initial_amount", "exceed_limit")
     def _check_amounts(self):
         for record in self:
@@ -447,10 +585,12 @@ class FloatRequest(models.Model):
                 raise ValidationError(_("Initial amount must be greater than zero."))
             if not record.initial_amount:
                 raise ValidationError(_("Initial amount is required."))
-            if record.can_exceed and record.exceed_limit <= 0:
+            if record.can_exceed and record.exceed_limit <= record.initial_amount:
                 raise ValidationError(
-                    _("Exceed limit must be greater than zero when exceed is allowed.")
+                    _("Exceed limit must be greater than initial amount when exceed is allowed.")
                 )
+            if record.max_single_disbursement <= 0:
+                raise ValidationError(_("Maximum single disbursement must be greater than zero."))
 
     def action_submit(self):
         """Submit the float request for approval."""

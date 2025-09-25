@@ -38,7 +38,7 @@
                     </div>
 
                     <!-- Auto-filled Current Details -->
-                    <group>
+                    <group string="Current Float Details">
                         <group>
                             <field name="float_request_id" string="Float Name"
                                 options="{'no_create': True}"
@@ -52,44 +52,42 @@
                                 string="Can exceed over the initial Amount" readonly="1" />
                             <field name="current_float_manager_id" string="Float Manager"
                                 readonly="1" />
-                            <field name="new_float_manager_id" string="New Float Manager"
-                                invisible="not modify_float_manager"
-                                required="modify_float_manager"
-                                domain="[('share', '=', False)]" />
+
                         </group>
                     </group>
 
                     <!-- Modification Checkboxes -->
-                    <group>
+                    <group string="Float Customizations">
                         <group>
                             <!-- Modify Float Amount Section -->
                             <field name="modify_float_amount" string="Modify the Float amount" />
                             <field name="new_float_amount" string="New Float Amount"
                                 widget="monetary"
-                                invisible="not modify_float_amount"
+                                readonly="not modify_float_amount"
                                 required="modify_float_amount" />
                         </group>
                         <group>
                             <!-- Can Exceed Section -->
-                            <field name="current_can_exceed"
-                                string="Can exceed over the initial Amount" readonly="1" />
-                            <field name="modify_can_exceed" string="Modify Can Exceed Permission" />
-                            <field name="new_can_exceed" string="New Can Exceed Setting"
-                                invisible="not modify_can_exceed" />
+<!--                            <field name="modify_can_exceed" string="Modify Can Exceed Permission" />-->
+                            <field name="new_can_exceed" string="New Float Amount Exceed Setting"/>
                             <field name="new_exceed_limit" string="New Exceed Limit"
                                 widget="monetary"
-                                invisible="not modify_can_exceed or not new_can_exceed"
-                                required="modify_can_exceed and new_can_exceed" />
+                                readonly="not new_can_exceed"
+                                required="new_can_exceed" />
                         </group>
                     </group>
 
                     <!-- Float Manager Section -->
-                    <group>
+                    <group string="Float Manager Change Section">
                         <field name="modify_float_manager" string="Change Float Manager?" />
+                        <field name="new_float_manager_id" string="New Float Manager"
+                                readonly="not modify_float_manager"
+                                required="modify_float_manager"
+                                domain="[('share', '=', False)]" />
                     </group>
 
                     <!-- Remarks Section -->
-                    <group>
+                    <group string="Reason for Customization">
                         <field name="reason_for_change" string="Reason for Change"
                             placeholder="Enter reason for customization..."
                             required="1"
@@ -106,15 +104,18 @@
 
                     <!-- Additional Requirements -->
                     <group string="System Configuration Options" invisible="state != 'draft'">
-                        <field name="modify_cross_department"
-                            string="Modify Cross-Department Access" />
+                        <group>
+<!--                        <field name="modify_cross_department"-->
+<!--                            string="Modify Cross-Department Access" />-->
                         <field name="new_allow_cross_department"
-                            string="Allow Cross-Department Requests"
-                            invisible="not modify_cross_department" />
-                        <field name="modify_exceed_margin" string="Modify Exceed Margins" />
-                        <field name="new_exceed_margin_percentage" string="New Exceed Margin %"
-                            invisible="not modify_exceed_margin"
-                            required="modify_exceed_margin" />
+                            string="Allow Cross-Department Requests"/>
+                            </group>
+                            <group>
+                                <field name="modify_exceed_margin" string="Modify Exceed Margins" />
+                                <field name="new_exceed_margin_percentage" string="New Exceed Margin %"
+                                    readonly="not modify_exceed_margin"
+                                    required="modify_exceed_margin" />
+                            </group>
                     </group>
 
                     <!-- Approval Information (auto-filled) -->
@@ -153,9 +154,10 @@
                 <field name="modify_float_amount" string="Amt Change" widget="boolean_toggle" />
                 <field name="modify_can_exceed" string="Exceed Change" widget="boolean_toggle" />
                 <field name="modify_float_manager" string="Mgr Change" widget="boolean_toggle" />
-                <field name="priority" />
+<!--                <field name="priority" />-->
                 <field name="create_uid" string="Requested By" />
                 <field name="approved_by" />
+                <field name="rejected_by" />
                 <field name="state" widget="badge"
                     decoration-success="state == 'approved'"
                     decoration-warning="state == 'requested'"
@@ -397,14 +399,5 @@
                 change amounts, exceed permissions, or float managers. <br />Click "Create" to
                 submit a customization request. </p>
         </field>
-    </record>
-
-    <record id="action_wizard_float_customization" model="ir.actions.act_window">
-        <field name="name">Customize Float</field>
-        <field name="res_model">float.customization</field>
-        <field name="view_mode">form</field>
-        <field name="view_id" ref="view_wizard_float_customization" />
-        <field name="target">new</field>
-        <field name="context">{'default_state': 'draft'}</field>
     </record>
 </odoo>

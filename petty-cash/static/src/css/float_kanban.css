@@ -6,10 +6,15 @@
     padding: 16px;
 }
 
+.oe_kanban_global_no_click {
+    pointer-events: none !important;
+    cursor: default;
+}
+
 /* Disable global click */
-/*.oe_kanban_global_no_click {*/
-/*    pointer-events: none;*/
-/*}*/
+.oe_kanban_global_no_click {
+    pointer-events: none;
+}
 
 .float-card-buttons button {
     pointer-events: auto;
@@ -103,6 +108,8 @@
     color: #28a745;
     font-weight: 600;
 }
+
+
 
 /* Responsive */
 @media (max-width: 768px) {

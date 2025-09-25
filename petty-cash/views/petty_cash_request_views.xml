@@ -17,6 +17,7 @@
                     <field name="float_request_id" string="Float Name" />
                     <field name="request_by" string="Requested By" />
                     <field name="category" string="Category" />
+                    <field name="employee_dept" string="Employee Dept" />
                     <field name="request_amount" string="Requested" widget="monetary"
                         sum="Total Requested" />
                     <field name="settlement_amount" string="Bills Total" widget="monetary"
